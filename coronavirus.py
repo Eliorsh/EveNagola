@@ -6,49 +6,61 @@ from mpl_toolkits.mplot3d import Axes3D
 import math
 import statistics
 from tqdm import tqdm
+from models import all_subjects, xgb_model
 
 
 class Person:
-    def __init__(self, id, age, has_background_disease, days_since_hul,
-                 is_quarantined, area_danger_level, blood_type, bias):
+    def __init__(self, id, is_infected, cough, fever, sore_throat, shortness_of_breath,
+                 head_ache, age_60_and_above, gender, was_abroad, had_contact):
         self.id = id
-        self.age = age
-        self.has_background_disease = has_background_disease
-        self.days_since_hul = days_since_hul
-        self.is_quarantined = is_quarantined
-        self.area_danger_level = area_danger_level
-        self.blood_type = blood_type
-        self.bias = bias
+        self.features = np.array([cough, fever, sore_throat, shortness_of_breath,
+                 head_ache, age_60_and_above, gender, was_abroad, had_contact])
+        self.feature_names = np.array(['cough', 'fever', 'sore_throat', 'shortness_of_breath',
+                 'head_ache', 'age_60_and_above', 'gender', 'was_abroad', 'had_contact'])
         self.danger_level = self.set_danger_level()
-        self.is_infected = self.set_infection()
+        self.is_infected = is_infected
+        # self.is_infected = self.set_infection()
 
     def __repr__(self):
-        return f"""
+        id_repr = f"""
                 id = {self.id}
-                age = {self.age}
-                has_background_disease = {self.has_background_disease}
-                days_since_hul = {self.days_since_hul}
-                is_quarantined = {self.is_quarantined}
-                area_danger_level = {self.area_danger_level}
-                blood_type = {self.blood_type}
+                """
+        features_repr = ''
+        for i in range(len(self.features)):
+            features_repr += f'{self.feature_names[i]} = {self.features[i]}\n'
+        more_repr = f"""
                 danger_level = {self.danger_level}
                 is_infected  = {self.is_infected}
                 """
+        return '\n'.join([id_repr, features_repr, more_repr])
 
     def set_danger_level(self):
-        age = self.age
-        has_background_disease = 75 if self.has_background_disease else 25
-        days_since_hul = 80 if self.days_since_hul < 14 else 20
-        is_quarantined = 75 if self.has_background_disease else 25
-        area_danger_level = self.area_danger_level
-        blood_type = 55 if self.blood_type == 'A' else 45 if self.blood_type == 'O' else 50
-        danger_level = np.mean([age, has_background_disease, days_since_hul,
-                                is_quarantined, area_danger_level, blood_type, self.bias]
-                               )
-        return np.max([danger_level, np.random.randint(DL_LOW, DL_HIGH)])
+        person_data = self.features.reshape((1, len(self.features)))
+        return xgb_model.predict_proba(person_data)[0, 1] * 100
+    #
+    # def set_infection(self):
+    #     return np.random.randint(1, 100) < self.danger_level
 
-    def set_infection(self):
-        return np.random.randint(1, 100) < self.danger_level
+
+class People:
+    def __init__(self, load=None):
+        if load.any():
+            self.people = self.load_people_from_csv(load)
+        else:
+            self.people = self.generate_random_people()
+
+    def load_people_from_csv(self, loaded_features):
+        people = []
+        for i in range(len(loaded_features)):
+            p = loaded_features[i, :]
+            people.append(Person(i, *p)) # * splits the list to individual parameters
+        return people
+
+    def generate_random_people(self):
+        pass
+
+    def get_people_sample(self, n):
+        return np.random.choice(self.people, n, replace=False)
 
 
 class PersonSet:
@@ -106,6 +118,11 @@ class PersonSet:
     def build(self):
         for i in range(self.size):
             for j in range(self.size):
+                # print('============================================================')
+                # print(f'len(self.persons): {len(self.persons)}')
+                # print(f'self.size: {self.size}')
+                # print(f'j: {j}, i: {i}')
+                # print('============================================================')
                 person = self.persons[j * self.size + i]
                 self.id_set[i, j] = person.id
                 self.infection_set[i, j] = person.is_infected
@@ -203,7 +220,8 @@ if __name__ == "__main__":
     errors = 0
     n_sick = 0
     all_tests = []
-    n_iterations = 100
+    all_tests_orig = []
+    n_iterations = 1000
     DL_LOW = 2
     DL_HIGH = 8
     BIAS = -230
@@ -211,21 +229,21 @@ if __name__ == "__main__":
     infection_buildings = np.zeros((set_size, set_size))
     infection_buildings_orig = np.zeros((set_size, set_size))
     all_infections = {}
+    all_people = People(load=all_subjects)
+    n_persons = set_size ** 2
     for j in tqdm(range(n_iterations)):
         Set = PersonSet(size=set_size)
-        n_persons = set_size ** 2
-        for i in range(1, n_persons + 1):
-            age = np.random.randint(1, 100)
-            has_background_disease = np.random.choice([True, False], p=[0.25, 0.75])
-            days_since_hul = np.random.randint(1, 100)
-            is_quarantined = np.random.choice([True, False], p=[0.1, 0.9])
-            area_danger_level = np.random.randint(1, 100)
-            blood_type = np.random.choice(['A', 'B', 'O', 'AB'])
-            bias = BIAS
-            p = Person(i, age, has_background_disease, days_since_hul,
-                       is_quarantined, area_danger_level, blood_type, bias)
+        people_sample = all_people.get_people_sample(n_persons)
+        # print('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
+        # print(f"len(people_sample) {len(people_sample)}")
+        # print(f"len(all_people.people) {len(all_people.people)}")
+        # print(f"n_persons {n_persons}")
+        # print('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
+
+        for p in people_sample:
             # print(p)
             Set.add_person(p)
+
         OriginalSet = copy.deepcopy(Set)
         Set.arrange()
         # print(Set)
@@ -245,6 +263,7 @@ if __name__ == "__main__":
         if Set.ids_found == OriginalSet.ids_found:
             n_sick += Set.n_found
             all_tests.append(Set.tests_used)
+            all_tests_orig.append(OriginalSet.tests_used)
             count_better += 1 if Set.tests_used < OriginalSet.tests_used else 0
             count_same += 1 if Set.tests_used == OriginalSet.tests_used else 0
             count_worse += 1 if Set.tests_used > OriginalSet.tests_used else 0
@@ -266,7 +285,8 @@ if __name__ == "__main__":
     print(f"Set worse than OriginalSet in {count_worse * 100.0/ good_iterations} % of times!")
 
     print(f"All sicks: {n_sick}")
-    print(f"Sum tests {np.sum(all_tests)}\nMean tests {np.mean(all_tests)} \nSD tests {np.std(all_tests)}")
+    print(f"Sum tests before {np.sum(all_tests_orig)}\nMean tests before {np.mean(all_tests_orig)} \nSD tests before {np.std(all_tests_orig)}")
+    print(f"Sum tests after {np.sum(all_tests)}\nMean tests after {np.mean(all_tests)} \nSD tests after {np.std(all_tests)}")
     print(Set)
 
     for k, v in all_infections.items():

@@ -14,9 +14,19 @@ df.age_60_and_above = df.age_60_and_above.apply(lambda x: 1 if x == 'Yes' else 0
 df.gender = df.gender.apply(lambda x: 1 if x == 'נקבה' else 0 if x == 'זכר' else None)
 df['was_abroad'] = df.test_indication.apply(lambda x: 1 if x == 'Abroad' else 0)
 df['had_contact'] = df.test_indication.apply(lambda x: 1 if x == 'Contact with confirmed' else 0)
+df_dates = df.drop(columns=['test_indication'])
 df = df.drop(columns=['test_date', 'test_indication'])
 # Drop NA TODO: אולי לא לזרוק
 df_no_na = df.dropna()
+data_by_day = {}
+plot_days = df_dates.test_date.unique()[-10:]
+for day in plot_days:
+    df_day = df_dates[df_dates.test_date == day]
+    df_day = df_day.drop(columns=['test_date'])
+    df_day_no_na = df_day.dropna()
+    np_df_day = np.array(df_day_no_na)
+    data_by_day[day] = np_df_day
+
 # Convert to numpy array
 all_subjects = np.array(df_no_na)
 

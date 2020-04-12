@@ -3,7 +3,7 @@ import copy
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 from tqdm import tqdm
-from models import test_subjects, xgb_model
+from models import test_subjects, xgb_model, data_by_day
 
 
 class Person:
@@ -45,6 +45,10 @@ class People:
             self.people = self.load_people_from_csv(load)
         else:
             self.people = self.generate_random_people()
+        self.used_people = []
+
+    def __len__(self):
+        return len(self.people)
 
     def load_people_from_csv(self, loaded_features):
         people = []
@@ -56,8 +60,15 @@ class People:
     def generate_random_people(self):
         pass
 
-    def get_people_sample(self, n):
-        return np.random.choice(self.people, n, replace=False)
+    def get_people_sample(self, n, no_reuse=False):
+        if no_reuse:
+            choose_from = [p for p in self.people if p.id not in self.used_people]
+            chosen = np.random.choice(choose_from, n, replace=False)
+            for p in chosen:
+                self.used_people.append(p.id)
+            return chosen
+        else:
+            return np.random.choice(self.people, n, replace=False)
 
 
 class PersonSet:
@@ -154,7 +165,6 @@ class PersonSet:
         # else:
         #     tests_used += 1
 
-
         row_pool = list(row_pool)
         line_rows = [i for i in range((len(row_pool))) if row_pool[i] == 1]
 
@@ -191,97 +201,104 @@ if __name__ == "__main__":
     n_sick = 0
     all_tests = []
     all_tests_orig = []
-    n_iterations = 1000
+    n_iterations = 1
     set_size = 5
     infection_buildings = np.zeros((set_size, set_size))
     infection_buildings_orig = np.zeros((set_size, set_size))
     all_infections = {}
     # all_people = People(load=all_subjects)
-    all_people = People(load=test_subjects)
-    n_persons = set_size ** 2
-    for j in tqdm(range(n_iterations)):
-        Set = PersonSet(size=set_size)
-        people_sample = all_people.get_people_sample(n_persons)
-        for p in people_sample:
-            # print(p)
-            Set.add_person(p)
+    # all_people = People(load=test_subjects)
+    graph_data_per_day = {}
+    for day, day_data in data_by_day.items():
+        all_people = People(load=day_data)
 
-        OriginalSet = copy.deepcopy(Set)
-        Set.arrange()
-        # print(Set)
-        Set.find()
-        all_infections[j] = Set.view_infections()
-        infection_buildings += Set.infection_set
-        # print(f"Sicks found: {Set.n_found}")
-        # print(f"Tests used: {Set.tests_used}")
-        # print('\n')
-        OriginalSet.build()
-        # print(OriginalSet)
-        OriginalSet.find()
-        infection_buildings_orig += OriginalSet.infection_set
-        # print(f"Sicks found: {OriginalSet.n_found}")
-        # print(f"Tests used: {OriginalSet.tests_used}")
+        n_persons = set_size ** 2
+        for j in tqdm(range(n_iterations)):
+            Set = PersonSet(size=set_size)
+            people_sample = all_people.get_people_sample(n_persons, no_reuse=True)
+            for p in people_sample:
+                # print(p)
+                Set.add_person(p)
 
-        if Set.ids_found == OriginalSet.ids_found:
-            n_sick += Set.n_found
-            all_tests.append(Set.tests_used)
-            all_tests_orig.append(OriginalSet.tests_used)
-            count_better += 1 if Set.tests_used < OriginalSet.tests_used else 0
-            count_same += 1 if Set.tests_used == OriginalSet.tests_used else 0
-            count_worse += 1 if Set.tests_used > OriginalSet.tests_used else 0
-            # print(f"{Set.tests_used} Set vs {OriginalSet.tests_used} OriginalSet ({Set.n_found} sick)")
-        else:
-            errors += 1
+            OriginalSet = copy.deepcopy(Set)
+            Set.arrange()
+            # print(Set)
+            Set.find()
+            all_infections[j] = Set.view_infections()
+            infection_buildings += Set.infection_set
+            # print(f"Sicks found: {Set.n_found}")
+            # print(f"Tests used: {Set.tests_used}")
+            # print('\n')
+            OriginalSet.build()
+            # print(OriginalSet)
+            OriginalSet.find()
+            infection_buildings_orig += OriginalSet.infection_set
+            # print(f"Sicks found: {OriginalSet.n_found}")
+            # print(f"Tests used: {OriginalSet.tests_used}")
 
-    good_iterations = n_iterations - errors
-    print("\nSummary\n----------")
-    print(f"Ran {n_iterations} iterations on samples of {n_persons} people ({set_size}X{set_size})")
-    print(f"Errors: {errors}")
-    print(f"Average of {n_sick / good_iterations} infected per sample\n")
+            if Set.ids_found == OriginalSet.ids_found:
+                n_sick += Set.n_found
+                all_tests.append(Set.tests_used)
+                all_tests_orig.append(OriginalSet.tests_used)
+                count_better += 1 if Set.tests_used < OriginalSet.tests_used else 0
+                count_same += 1 if Set.tests_used == OriginalSet.tests_used else 0
+                count_worse += 1 if Set.tests_used > OriginalSet.tests_used else 0
+                # print(f"{Set.tests_used} Set vs {OriginalSet.tests_used} OriginalSet ({Set.n_found} sick)")
+            else:
+                errors += 1
 
-    perc_better = count_better * 100.0 / good_iterations
-    perc_same = count_same * 100.0 / good_iterations
+        graph_data_per_day[day] = {'n_sick': n_sick,
+                                   'n_tests_prim': np.sum(all_tests_orig),
+                                   'n_tests': np.sum(all_tests),
+                                   }
+        good_iterations = n_iterations - errors
+        print("\nSummary\n----------")
+        print(f"Ran {n_iterations} iterations on samples of {n_persons} people ({set_size}X{set_size})")
+        print(f"Errors: {errors}")
+        print(f"Average of {n_sick / good_iterations} infected per sample\n")
 
-    print(f"Set better than or same as OriginalSet in {(count_better + count_same) * 100.0/ good_iterations} % of times! (better: {perc_better}, same: {perc_same})")
+        perc_better = count_better * 100.0 / good_iterations
+        perc_same = count_same * 100.0 / good_iterations
 
-    print(f"Set worse than OriginalSet in {count_worse * 100.0/ good_iterations} % of times!")
+        print(f"Set better than or same as OriginalSet in {(count_better + count_same) * 100.0/ good_iterations} % of times! (better: {perc_better}, same: {perc_same})")
 
-    print(f"All sicks: {n_sick}")
-    print(f"Sum tests before {np.sum(all_tests_orig)}\nMean tests before {np.mean(all_tests_orig)} \nSD tests before {np.std(all_tests_orig)}")
-    print(f"Sum tests after {np.sum(all_tests)}\nMean tests after {np.mean(all_tests)} \nSD tests after {np.std(all_tests)}")
-    print(Set)
+        print(f"Set worse than OriginalSet in {count_worse * 100.0/ good_iterations} % of times!")
 
-    for k, v in all_infections.items():
-        print(f"iteration {k+1}")
-        print(v)
+        print(f"All sicks: {n_sick}")
+        print(f"Sum tests before {np.sum(all_tests_orig)}\nMean tests before {np.mean(all_tests_orig)} \nSD tests before {np.std(all_tests_orig)}")
+        print(f"Sum tests after {np.sum(all_tests)}\nMean tests after {np.mean(all_tests)} \nSD tests after {np.std(all_tests)}")
+        print(Set)
 
-print(infection_buildings)
+        for k, v in all_infections.items():
+            print(f"iteration {k+1}")
+            print(v)
 
-fig = plt.figure(figsize=(16, 8))
-buildings = {'Re-ordered': infection_buildings,
-             'Original order': infection_buildings_orig}
-fig_n = 0
-for name, building in buildings.items():
-    fig_n += 1
-    ax1 = fig.add_subplot(2, 2, fig_n, projection='3d')
+    print(infection_buildings)
 
-    _x = np.arange(building.shape[0])
-    _y = np.arange(building.shape[1])
-    _xx, _yy = np.meshgrid(_x, _y)
-    x, y = _xx.ravel(), _yy.ravel()
+    fig = plt.figure(figsize=(16, 8))
+    buildings = {'Re-ordered': infection_buildings,
+                 'Original order': infection_buildings_orig}
+    fig_n = 0
+    for name, building in buildings.items():
+        fig_n += 1
+        ax1 = fig.add_subplot(2, 2, fig_n, projection='3d')
 
-    dz = building.ravel()
-    z = np.zeros_like(dz)
-    dx = dy = 1
-    ax1.bar3d(x, y, z, dx, dy, dz, shade=True, alpha=0.2)
-    ax1.set_title(f'CoronaCity - {name}')
+        _x = np.arange(building.shape[0])
+        _y = np.arange(building.shape[1])
+        _xx, _yy = np.meshgrid(_x, _y)
+        x, y = _xx.ravel(), _yy.ravel()
 
-    fig_n += 1
-    ax2 = fig.add_subplot(2, 2, fig_n)
-    ax2.set_title(f'Heatmap - {name}')
-    # cmap='hot'
-    im = ax2.imshow(building, cmap='viridis', interpolation='nearest', vmax=np.max(infection_buildings))
-    plt.colorbar(im)
+        dz = building.ravel()
+        z = np.zeros_like(dz)
+        dx = dy = 1
+        ax1.bar3d(x, y, z, dx, dy, dz, shade=True, alpha=0.2)
+        ax1.set_title(f'CoronaCity - {name}')
 
-plt.show()
+        fig_n += 1
+        ax2 = fig.add_subplot(2, 2, fig_n)
+        ax2.set_title(f'Heatmap - {name}')
+        # cmap='hot'
+        im = ax2.imshow(building, cmap='viridis', interpolation='nearest', vmax=np.max(infection_buildings))
+        plt.colorbar(im)
 
+    plt.show()

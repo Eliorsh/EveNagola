@@ -6,7 +6,7 @@ from mpl_toolkits.mplot3d import Axes3D
 import math
 import statistics
 from tqdm import tqdm
-from models import all_subjects, xgb_model
+from models import all_subjects, test_subjects, xgb_model
 
 
 class Person:
@@ -221,7 +221,7 @@ if __name__ == "__main__":
     n_sick = 0
     all_tests = []
     all_tests_orig = []
-    n_iterations = 1000
+    n_iterations = 1
     DL_LOW = 2
     DL_HIGH = 8
     BIAS = -230
@@ -229,7 +229,8 @@ if __name__ == "__main__":
     infection_buildings = np.zeros((set_size, set_size))
     infection_buildings_orig = np.zeros((set_size, set_size))
     all_infections = {}
-    all_people = People(load=all_subjects)
+    # all_people = People(load=all_subjects)
+    all_people = People(load=test_subjects)
     n_persons = set_size ** 2
     for j in tqdm(range(n_iterations)):
         Set = PersonSet(size=set_size)

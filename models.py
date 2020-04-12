@@ -25,6 +25,7 @@ X = all_subjects[:, 1:]
 Y = all_subjects[:, 0]
 X_train, X_test, y_train, y_test = train_test_split(
     X, Y, test_size=0.33, random_state=42)
+test_subjects = np.concatenate((y_test.reshape((len(y_test), 1)), X_test), axis=1)
 
 # logistic regression
 logreg_model = LogisticRegression(C=1e5)

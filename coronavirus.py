@@ -1,12 +1,9 @@
-import pandas as pd
 import numpy as np
 import copy
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
-import math
-import statistics
 from tqdm import tqdm
-from models import all_subjects, test_subjects, xgb_model
+from models import test_subjects, xgb_model
 
 
 class Person:
@@ -118,11 +115,6 @@ class PersonSet:
     def build(self):
         for i in range(self.size):
             for j in range(self.size):
-                # print('============================================================')
-                # print(f'len(self.persons): {len(self.persons)}')
-                # print(f'self.size: {self.size}')
-                # print(f'j: {j}, i: {i}')
-                # print('============================================================')
                 person = self.persons[j * self.size + i]
                 self.id_set[i, j] = person.id
                 self.infection_set[i, j] = person.is_infected
@@ -155,6 +147,13 @@ class PersonSet:
         tests_used = 2 * self.size
         lst_of_sick = []
         row_pool, col_pool = self.pool()
+        # # Probably not possible because of low signal חכמולוגים של ויצמן
+        # if sum(row_pool) + sum(col_pool) == 0:
+        #     tests_used = 1
+        #     return lst_of_sick, 0, tests_used
+        # else:
+        #     tests_used += 1
+
 
         row_pool = list(row_pool)
         line_rows = [i for i in range((len(row_pool))) if row_pool[i] == 1]
@@ -162,19 +161,15 @@ class PersonSet:
         col_pool = list(col_pool)
         line_col = [i for i in range(len(col_pool)) if col_pool[i] == 1]
 
-        # חולה יחיד
-        if sum(row_pool) == 1 and sum(col_pool) == 1:
-            a = (row_pool.index(max(row_pool)), col_pool.index(max(col_pool)))
-            lst_of_sick.append(a)
+        for row in line_rows:
+            for col in line_col:
+                if self.infection_set[row, col]:
+                    lst_of_sick.append((row, col))
+                if sum(row_pool) == 1 or sum(col_pool) == 1:
+                    # אין צורך בבדיקות נוספות
+                    continue
+                tests_used += 1
 
-        # תבנית קלה של משלים במידה והבחירה הראשונה לא הצליחה אם היא כן הצליחה חייבים לבדוק את שניהם
-        # לחשוב לסנן את הרשימנות בדיקה לאלו שיש בהם 1- ולקחת רק את האינדקס שהוא מייצג
-        else:
-            for row in line_rows:
-                for col in line_col:
-                    tests_used += 1
-                    if self.infection_set[row, col]:
-                        lst_of_sick.append((row, col))
         self.found_coords = lst_of_sick
         self.find_ids()
         self.n_found = len(lst_of_sick)
@@ -185,32 +180,7 @@ class PersonSet:
         for i, j in self.found_coords:
             self.ids_found.add(self.id_set[i,j])
 
-
-# k =1
-#
-# big_count = 0
-# big_count2 = 0
-# big_sick = 0
-# list_of_count = []
-#
-#
-# for i in range(1000000):
-#     lst_of_sick, count_of_test, matrix_of_sick = create_sets()
-#     big_count += count_of_test
-#     big_count2 += count_of_test
-#     list_of_count.append(big_count2)
-#     big_count2 = 0
-#     big_sick += len(lst_of_sick)
-#
-# e = statistics.mean(list_of_count)
-# sd = statistics.stdev(list_of_count)
-# print("the mean of simulatin is: ",e)
-# print("the sd of simulatin is: ",sd)
-# k=56
-
-
 # משחק בול פגיעה מהצבא
-
 #שלב הבא סימולציה - ניקח לולאה ונעביר את הדבר הזה 10 פעמים, נסכום את כמות הפעולות בכל פעם ואת כמות החולים ונדע להגיד כמה חולים זיהינו ב360 פונטציאלים
 
 if __name__ == "__main__":
@@ -221,11 +191,8 @@ if __name__ == "__main__":
     n_sick = 0
     all_tests = []
     all_tests_orig = []
-    n_iterations = 1
-    DL_LOW = 2
-    DL_HIGH = 8
-    BIAS = -230
-    set_size = 6
+    n_iterations = 1000
+    set_size = 5
     infection_buildings = np.zeros((set_size, set_size))
     infection_buildings_orig = np.zeros((set_size, set_size))
     all_infections = {}
@@ -235,12 +202,6 @@ if __name__ == "__main__":
     for j in tqdm(range(n_iterations)):
         Set = PersonSet(size=set_size)
         people_sample = all_people.get_people_sample(n_persons)
-        # print('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
-        # print(f"len(people_sample) {len(people_sample)}")
-        # print(f"len(all_people.people) {len(all_people.people)}")
-        # print(f"n_persons {n_persons}")
-        # print('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
-
         for p in people_sample:
             # print(p)
             Set.add_person(p)

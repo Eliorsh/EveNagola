@@ -28,9 +28,16 @@ class DataProcessor:
         # Convert to numpy array
         self.np_data = np.array(df_no_na)
 
-    def get_daily_data(self, days_back):
+    def get_daily_data(self, date_input, end_date=np.datetime64('today')):
+        if type(date_input) == int:
+            plot_days = self.all_dates[-date_input:]
+        elif type(date_input) in [np.datetime64, str]:
+            plot_days = np.arange(date_input, np.datetime64(end_date) + 1,
+                                  dtype='datetime64[D]')
+        elif type(date_input) == list:
+            plot_days = np.array(date_input) # of form ['yyyy-mm-dd', ...]
+            plot_days = [np.datetime64(date) for date in plot_days]
         data_by_day = {}
-        plot_days = self.all_dates[-days_back:]
         for day in plot_days:
             df_day = self.df_dates[self.df_dates.test_date == day]
             df_day = df_day.drop(columns=['test_date'])

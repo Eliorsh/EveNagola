@@ -188,9 +188,10 @@ class Workspace:
             plt.show()
             return nopool, prims, evens
 
-    def daily(self, days_back, matrices_sorted=True, display_other=False):
+    def daily(self, date_input, end_date=np.datetime64('today'),
+              matrices_sorted=True, display_other=False):
         # TODO: specific days instead of days_back
-        data_by_day = self.dp.get_daily_data(days_back)
+        data_by_day = self.dp.get_daily_data(date_input, end_date)
         graph_data_per_day = {}
         for day, day_data in data_by_day.items():
             all_people = People(model=self.model, load=day_data)
@@ -287,6 +288,10 @@ class Workspace:
 if __name__ == "__main__":
     data_path = 'data/corona_tested_individuals_ver_002.xlsx'
     ws = Workspace(data_path, set_size=5, model='xgb')
-    # ws.sample_test_set(n_iterations=10)
-    ws.daily(days_back=15, matrices_sorted=True, display_other=True)
-    # ws.examine_entire_test_set()
+    # ws.sample_test_set(n_iterations=100)
+    # date_input = 3
+    # date_input = '2020-03-30'
+    # end_date = '2020-04-02'
+    # date_input = ['2020-03-28', '2020-03-30', '2020-04-02']
+    # ws.daily(date_input=date_input, matrices_sorted=True, display_other=True)
+    # # ws.examine_entire_test_set()

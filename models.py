@@ -13,36 +13,40 @@ class Models:
         self.x_train = x
         self.y_train = y
         self.models_dict = {
-            'xgb': self.get_xgb_model(),
-            'logreg': self.get_logreg_model(),
-            'bayes': self.get_bayesian_model(),
-            'forest': self.get_forest_model(),
+            'xgb': self.get_xgb_model,
+            'logreg': self.get_logreg_model,
+            'bayes': self.get_bayesian_model,
+            'forest': self.get_forest_model,
         }
 
     def get_model(self, model):
-        return self.models_dict.get(model, DEFAULT_MODEL)
+        return self.models_dict.get(model, DEFAULT_MODEL)()
 
     def get_logreg_model(self):
         # logistic regression
         logreg_model = LogisticRegression(C=1e5)
         logreg_model.fit(self.x_train, self.y_train)
+        print("using logreg model")
         return logreg_model
 
     def get_xgb_model(self):
         # XGB
         xgb_model = XGBClassifier()
         xgb_model.fit(self.x_train, self.y_train)
+        print("using xgb model")
         return xgb_model
 
     def get_bayesian_model(self):
         bayes_model = GaussianNB()
         bayes_model.fit(self.x_train, self.y_train)
+        print("using bayes model")
         return bayes_model
 
     def get_forest_model(self):
         forest_model = RandomForestClassifier(n_estimators=10,
                                               criterion="gini")
         forest_model.fit(self.x_train, self.y_train)
+        print("using forest model")
         return forest_model
 
 def evaluate_results(pred, y_test):

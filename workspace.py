@@ -16,6 +16,7 @@ class Workspace:
         self.n_days_available = len(self.dp.all_dates)
         X_train, X_test, y_train, y_test = self.dp.split_data()
         models = Models(X_train, y_train)
+        self.model_name = model
         self.model = models.get_model(model)
 
         self.set_size = set_size
@@ -128,8 +129,7 @@ class Workspace:
 
         plt.show()
 
-    @staticmethod
-    def graph_days_barplot(graph_data_per_day, matrices_sorted=True, verbose=False):
+    def graph_days_barplot(self, graph_data_per_day, matrices_sorted=True, verbose=False):
         if verbose:
             labels = [str(k)[:10] for k in list(graph_data_per_day.keys())]
             prims_sorted = [d['n_tests_prim_sorted'] for d in graph_data_per_day.values()]
@@ -155,7 +155,7 @@ class Workspace:
 
             # Add some text for labels, title and custom x-axis tick labels, etc.
             ax.set_ylabel('Number of tests')
-            ax.set_title('Number of tests by day and pooling method')
+            ax.set_title(f'Number of tests by day and pooling method - model: {self.model_name}')
             ax.set_xticks(x + 2*width + offset)
             ax.set_xticklabels(labels, rotation=45)
             ax.legend()
@@ -167,7 +167,7 @@ class Workspace:
             labels = [str(k)[:10] for k in list(graph_data_per_day.keys())]
             prims = [d['n_tests_prim' + suffix] for d in graph_data_per_day.values()]
             evens = [d['n_tests' + suffix] for d in graph_data_per_day.values()]
-            nopool = [d['total_people' + suffix] for d in graph_data_per_day.values()]
+            nopool = [d['total_people'] for d in graph_data_per_day.values()]
 
             width = 0.35  # the width of the bars
             offset = 0.1
@@ -181,7 +181,7 @@ class Workspace:
 
             # Add some text for labels, title and custom x-axis tick labels, etc.
             ax.set_ylabel('Number of tests')
-            ax.set_title('Number of tests by day and pooling method')
+            ax.set_title(f'Number of tests by day and pooling method - model: {self.model_name}')
             ax.set_xticks(x)
             ax.set_xticklabels(labels, rotation=45)
             ax.legend()
@@ -255,7 +255,7 @@ class Workspace:
         all_people = People(model=self.model, load=subjects)
         matrices, unused_people = self.arrange_person_matrices(all_people)
         for matrix in tqdm(matrices):
-            self.work(matrix)
+            self.work(matrix, randomize_orig=True)
         print(f"{len(unused_people)} were omitted")
         self.summary(len(matrices))
         self.graph_heatmap()
@@ -287,11 +287,13 @@ class Workspace:
 
 if __name__ == "__main__":
     data_path = 'data/corona_tested_individuals_ver_002.xlsx'
-    ws = Workspace(data_path, set_size=5, model='xgb')
+    # model_names = ['xgb', 'logreg', 'bayes', 'forest']
+    # for model_name in model_names:
+    ws = Workspace(data_path, set_size=8, model='xgb')
     # ws.sample_test_set(n_iterations=100)
-    # date_input = 3
-    # date_input = '2020-03-30'
-    # end_date = '2020-04-02'
+    # date_input = 10
+    date_input = '2020-03-27'
+    end_date = '2020-04-05'
     # date_input = ['2020-03-28', '2020-03-30', '2020-04-02']
-    # ws.daily(date_input=date_input, matrices_sorted=True, display_other=True)
-    # # ws.examine_entire_test_set()
+    # ws.daily(date_input=date_input, end_date=end_date, matrices_sorted=True, display_other=False)
+    ws.examine_entire_test_set()

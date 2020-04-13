@@ -5,18 +5,18 @@ from mpl_toolkits.mplot3d import Axes3D
 from tqdm import tqdm
 
 from data_reader import DataProcessor
-from models import Models
+from models import Models, DEFAULT_MODEL
 from person_classes import People, PersonSet
 
 
 class Workspace:
-    def __init__(self, data_path, set_size):
+    def __init__(self, data_path, set_size, model=DEFAULT_MODEL):
         self.dp = DataProcessor(data_path)
         self.dp.clean_data()
         self.n_days_available = len(self.dp.all_dates)
         X_train, X_test, y_train, y_test = self.dp.split_data()
         models = Models(X_train, y_train)
-        self.model = models.get_xgb_model()
+        self.model = models.get_model(model)
 
         self.set_size = set_size
         self.n_persons = set_size ** 2
@@ -34,14 +34,15 @@ class Workspace:
         self.infection_buildings_orig = np.zeros((self.set_size, self.set_size))
         self.all_infections = []
 
-    def work(self, all_people):
+    def work(self, people_sample, randomize_orig=False):
         Set = PersonSet(size=self.set_size)
-        people_sample = all_people.get_people_sample(self.n_persons, no_reuse=True)
         for p in people_sample:
             # print(p)
             Set.add_person(p)
 
         OriginalSet = copy.deepcopy(Set)
+        if randomize_orig:
+            OriginalSet.derrange()
         Set.arrange()
         # print(Set)
         Set.find()
@@ -128,32 +129,67 @@ class Workspace:
         plt.show()
 
     @staticmethod
-    def graph_days_barplot(graph_data_per_day):
-        labels = [str(k)[:10] for k in list(graph_data_per_day.keys())]
-        prims = [d['n_tests_prim'] for d in graph_data_per_day.values()]
-        evens = [d['n_tests'] for d in graph_data_per_day.values()]
-        nopool = [d['total_people'] for d in graph_data_per_day.values()]
+    def graph_days_barplot(graph_data_per_day, matrices_sorted=True, verbose=False):
+        if verbose:
+            labels = [str(k)[:10] for k in list(graph_data_per_day.keys())]
+            prims_sorted = [d['n_tests_prim_sorted'] for d in graph_data_per_day.values()]
+            evens_sorted = [d['n_tests_sorted'] for d in graph_data_per_day.values()]
+            prims_unsorted = [d['n_tests_prim_unsorted'] for d in graph_data_per_day.values()]
+            evens_unsorted = [d['n_tests_unsorted'] for d in graph_data_per_day.values()]
+            nopool = [d['total_people'] for d in graph_data_per_day.values()]
 
-        x = np.arange(len(labels))  # the label locations
-        width = 0.35  # the width of the bars
-        offset = 0.1
+            width = 0.35  # the width of the bars
+            offset = 0.1
+            x = 2*np.arange(len(labels))  # the label locations
+            fig, ax = plt.subplots()
+            rects1 = ax.bar(x + offset, nopool, width - offset,
+                            label='No pooling')
+            rects2 = ax.bar(x + width + offset, prims_unsorted, width - offset,
+                            label='Original pooling - unsorted')
+            rects2_ = ax.bar(x + 2*width + offset, prims_sorted, width - offset,
+                             label='Original pooling - sorted')
+            rects3 = ax.bar(x + 3*width + offset, evens_unsorted, width - offset,
+                            label='Rearranged pooling - unsorted')
+            rects3_ = ax.bar(x + 4*width + offset, evens_sorted, width - offset,
+                            label='Rearranged pooling - sorted')
 
-        fig, ax = plt.subplots()
-        rects1 = ax.bar(x - width + offset, nopool, width - offset,
-                        label='No pooling')
-        rects2 = ax.bar(x, prims, width - offset, label='Original pooling')
-        rects3 = ax.bar(x + width - offset, evens, width - offset,
-                        label='Rearranged pooling')
+            # Add some text for labels, title and custom x-axis tick labels, etc.
+            ax.set_ylabel('Number of tests')
+            ax.set_title('Number of tests by day and pooling method')
+            ax.set_xticks(x + 2*width + offset)
+            ax.set_xticklabels(labels, rotation=45)
+            ax.legend()
+            plt.show()
+            return prims_sorted, evens_sorted, prims_unsorted, evens_unsorted, \
+                   nopool
+        else:
+            suffix = '_sorted' if matrices_sorted else '_unsorted'
+            labels = [str(k)[:10] for k in list(graph_data_per_day.keys())]
+            prims = [d['n_tests_prim' + suffix] for d in graph_data_per_day.values()]
+            evens = [d['n_tests' + suffix] for d in graph_data_per_day.values()]
+            nopool = [d['total_people' + suffix] for d in graph_data_per_day.values()]
 
-        # Add some text for labels, title and custom x-axis tick labels, etc.
-        ax.set_ylabel('Number of tests')
-        ax.set_title('Number of tests by day and pooling method')
-        ax.set_xticks(x)
-        ax.set_xticklabels(labels, rotation=45)
-        ax.legend()
-        plt.show()
+            width = 0.35  # the width of the bars
+            offset = 0.1
+            x = np.arange(len(labels))  # the label locations
+            fig, ax = plt.subplots()
+            rects1 = ax.bar(x - width + offset, nopool, width - offset,
+                            label='No pooling')
+            rects2 = ax.bar(x, prims, width - offset, label='Original pooling')
+            rects3 = ax.bar(x + width - offset, evens, width - offset,
+                            label='Rearranged pooling')
 
-    def daily(self, days_back):
+            # Add some text for labels, title and custom x-axis tick labels, etc.
+            ax.set_ylabel('Number of tests')
+            ax.set_title('Number of tests by day and pooling method')
+            ax.set_xticks(x)
+            ax.set_xticklabels(labels, rotation=45)
+            ax.legend()
+            plt.show()
+            return nopool, prims, evens
+
+    def daily(self, days_back, matrices_sorted=True, display_other=False):
+        # TODO: specific days instead of days_back
         data_by_day = self.dp.get_daily_data(days_back)
         graph_data_per_day = {}
         for day, day_data in data_by_day.items():
@@ -161,35 +197,96 @@ class Workspace:
             print(6 * f"*********************************************************************\n")
             print(f"Day: {day}")
             print(f"Loaded: {len(all_people)} people")
-            people_left = len(all_people)
-            self.reset_variables()
-            while people_left >= self.n_persons:
-                self.work(all_people)
-                people_left -= self.n_persons
-                print(f"people_left: {people_left}")
-            graph_data_per_day[day] = {'n_sick': self.n_sick,
-                                       'total_people': len(all_people),
-                                       'n_tests_prim': np.sum(self.all_tests_orig),
-                                       'n_tests': np.sum(self.all_tests),
-                                       }
-        self.graph_days_barplot(graph_data_per_day)
+            graph_data_per_day[day] = self._one_day_work(all_people,
+                                                         matrices_sorted)
+            if display_other:
+                graph_data_per_day[day].update(self._one_day_work(all_people,
+                                                                  not matrices_sorted))
 
-    def simulate(self, n_iterations):
+        bar_data = self.graph_days_barplot(graph_data_per_day,
+                                           matrices_sorted=matrices_sorted,
+                                           verbose=display_other)
+        if display_other:
+            prims_sorted, evens_sorted, prims_unsorted, evens_unsorted, \
+            nopool = bar_data
+            print(f"Days: {list(graph_data_per_day.keys())}")
+            print(f"No pooling sorted: {nopool}")
+            print(f"Original pooling sorted: {prims_sorted}")
+            print(f"Rearranged pooling sorted: {evens_sorted}")
+            print(f"Original pooling unsorted: {prims_unsorted}")
+            print(f"Rearranged pooling unsorted: {evens_unsorted}")
+
+        else:
+            nopool, prims, evens = bar_data
+            print(f"Days: {list(graph_data_per_day.keys())}")
+            print(f"No pooling: {nopool}")
+            print(f"Original pooling: {prims}")
+            print(f"Rearranged pooling: {evens}")
+
+    def _one_day_work(self, all_people, matrices_sorted):
+        self.reset_variables()
+        matrices, unused_people = self.arrange_person_matrices(
+            all_people, risk_sorted=not matrices_sorted)
+        for matrix in tqdm(matrices):
+            self.work(matrix, randomize_orig=True)
+        suffix = '_sorted' if matrices_sorted else '_unsorted'
+        return {'n_sick': self.n_sick,
+                'total_people': len(all_people),
+                'n_tests_prim' + suffix: np.sum(self.all_tests_orig),
+                'n_tests' + suffix: np.sum(self.all_tests),
+                }
+
+    def sample_test_set(self, n_iterations):
         self.reset_variables()
         # subjects = self.dp.get_all_data()
         subjects = self.dp.get_test_data()
         all_people = People(model=self.model, load=subjects)
         for j in tqdm(range(n_iterations)):
-            self.work(all_people)
+            people_sample = all_people.get_people_sample(self.n_persons, no_reuse=True)
+            self.work(people_sample)
         self.summary(n_iterations)
         self.graph_heatmap()
+
+    def examine_entire_test_set(self):
+        self.reset_variables()
+        # subjects = self.dp.get_all_data()
+        subjects = self.dp.get_test_data()
+        all_people = People(model=self.model, load=subjects)
+        matrices, unused_people = self.arrange_person_matrices(all_people)
+        for matrix in tqdm(matrices):
+            self.work(matrix)
+        print(f"{len(unused_people)} were omitted")
+        self.summary(len(matrices))
+        self.graph_heatmap()
+
+    def arrange_person_matrices(self, people, risk_sorted=True):
+        if risk_sorted:
+            people_order = people.sort_by_risk()
+        else:
+            people_order = people.get_people_list(randomize=False)
+        people_ids = [p.id for p in people_order]
+        matrix_size = self.set_size ** 2
+        n_matrices = len(people) // matrix_size
+        n_left = len(people) % matrix_size
+        pepole_left = people_ids[-n_left:]
+
+        person_matrices = []
+        for i in range(n_matrices):
+            arranged_people = [people_order[n_matrices * j + i]
+                               for j in range(matrix_size)]
+            person_matrices.append(arranged_people)
+
+        print(f'len(person_matrices): {len(person_matrices)}')
+
+        return person_matrices, pepole_left
 
 # משחק בול פגיעה מהצבא
 #שלב הבא סימולציה - ניקח לולאה ונעביר את הדבר הזה 10 פעמים, נסכום את כמות הפעולות בכל פעם ואת כמות החולים ונדע להגיד כמה חולים זיהינו ב360 פונטציאלים
 
 
 if __name__ == "__main__":
-    data_path = 'corona_tested_individuals_ver_001.xlsx'
-    ws = Workspace(data_path, set_size=5)
-    # ws.simulate(n_iterations=100)
-    ws.daily(days_back=1)
+    data_path = 'data/corona_tested_individuals_ver_002.xlsx'
+    ws = Workspace(data_path, set_size=5, model='xgb')
+    # ws.sample_test_set(n_iterations=10)
+    ws.daily(days_back=15, matrices_sorted=True, display_other=True)
+    # ws.examine_entire_test_set()

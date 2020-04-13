@@ -1,13 +1,26 @@
 from xgboost import XGBClassifier
 from sklearn.linear_model import LogisticRegression
+from sklearn.naive_bayes import GaussianNB
+from sklearn.ensemble import RandomForestClassifier
 
 from data_reader import DataProcessor
+
+DEFAULT_MODEL = 'xgb'
 
 
 class Models:
     def __init__(self, x, y):
         self.x_train = x
         self.y_train = y
+        self.models_dict = {
+            'xgb': self.get_xgb_model(),
+            'logreg': self.get_logreg_model(),
+            'bayes': self.get_bayesian_model(),
+            'forest': self.get_forest_model(),
+        }
+
+    def get_model(self, model):
+        return self.models_dict.get(model, DEFAULT_MODEL)
 
     def get_logreg_model(self):
         # logistic regression
@@ -21,6 +34,16 @@ class Models:
         xgb_model.fit(self.x_train, self.y_train)
         return xgb_model
 
+    def get_bayesian_model(self):
+        bayes_model = GaussianNB()
+        bayes_model.fit(self.x_train, self.y_train)
+        return bayes_model
+
+    def get_forest_model(self):
+        forest_model = RandomForestClassifier(n_estimators=10,
+                                              criterion="gini")
+        forest_model.fit(self.x_train, self.y_train)
+        return forest_model
 
 def evaluate_results(pred, y_test):
     TN = 0

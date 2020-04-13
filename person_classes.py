@@ -66,6 +66,14 @@ class People:
         else:
             return np.random.choice(self.people, n, replace=False)
 
+    def sort_by_risk(self, reverse=True):
+        return sorted(self.people, key=lambda x: x.danger_level, reverse=reverse)
+
+    def get_people_list(self, randomize=False):
+        if randomize:
+            return np.random.permutation(self.people)
+        return self.people
+
 
 class PersonSet:
     def __init__(self, size):
@@ -130,6 +138,9 @@ class PersonSet:
     def arrange(self):
         self.sort_persons_by_danger()
         self.build()
+
+    def derrange(self):
+        np.random.shuffle(self.persons)
 
     def pool(self):
         # add row and columns

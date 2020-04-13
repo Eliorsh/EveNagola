@@ -2,15 +2,24 @@ import copy
 
 import numpy as np
 import matplotlib.pyplot as plt
-from tqdm import tqdm
 
-from coronavirus import People, PersonSet
-from models import data_by_day
+from data_reader import DataProcessor
+from models import Models
+from workspace import People, PersonSet
+
+data_path = 'corona_tested_individuals_ver_001.xlsx'
+dp = DataProcessor(data_path)
+dp.clean_data()
+X_train, X_test, y_train, y_test = dp.split_data()
+models = Models(X_train, y_train)
+xgb_model = models.get_xgb_model()
+
+data_by_day = dp.get_daily_data(7)
 
 set_size = 5
 graph_data_per_day = {}
 for day, day_data in data_by_day.items():
-    all_people = People(load=day_data)
+    all_people = People(xgb_model, load=day_data)
     print(f"*********************************************************************")
     print(f"*********************************************************************")
     print(f"*********************************************************************")

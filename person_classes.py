@@ -9,8 +9,8 @@ class Person:
                  head_ache, age_60_and_above, gender, was_abroad, had_contact])
         self.feature_names = np.array(['cough', 'fever', 'sore_throat', 'shortness_of_breath',
                  'head_ache', 'age_60_and_above', 'gender', 'was_abroad', 'had_contact'])
-        self.danger_level = self.set_danger_level(model)
         self.is_infected = is_infected
+        self.danger_level = self.set_danger_level(model)
         # self.is_infected = self.set_infection()
 
     def __repr__(self):
@@ -27,6 +27,11 @@ class Person:
         return '\n'.join([id_repr, features_repr, more_repr])
 
     def set_danger_level(self, model):
+        # # return self.is_infected * 100
+        # if np.random.randint(1, 100) < 85:
+        #     return self.is_infected * 100
+        # else:
+        #     return (not self.is_infected) * 100
         person_data = self.features.reshape((1, len(self.features)))
         return model.predict_proba(person_data)[0, 1] * 100
     #

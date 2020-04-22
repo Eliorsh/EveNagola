@@ -31,7 +31,17 @@ class Models:
 
     def get_xgb_model(self):
         # XGB
-        xgb_model = XGBClassifier()
+        parameters = {
+            "max_depth": 4,
+            "learning_rate": 0.001,
+            "n_estimators": 140,
+            "scale_pos_weight": 4,
+            # "eta": 0.5,
+            # "min_child_weight": 5,
+            # "gamma": 0.2,
+            # "colsample_bytree": 0.5
+        }
+        xgb_model = XGBClassifier(**parameters)
         xgb_model.fit(self.x_train, self.y_train)
         print("using xgb model")
         return xgb_model
@@ -43,8 +53,10 @@ class Models:
         return bayes_model
 
     def get_forest_model(self):
-        forest_model = RandomForestClassifier(n_estimators=10,
-                                              criterion="gini")
+        forest_model = RandomForestClassifier(n_estimators=100,
+                               random_state=42,
+                               max_features = 'sqrt',
+                               n_jobs=-1, verbose = 1)
         forest_model.fit(self.x_train, self.y_train)
         print("using forest model")
         return forest_model
@@ -71,7 +83,7 @@ def evaluate_results(pred, y_test):
 
 
 if __name__ == '__main__':
-    data_path = 'corona_tested_individuals_ver_001.xlsx'
+    data_path = 'data/corona_tested_individuals_ver_003.xlsx'
     dp = DataProcessor(data_path)
     dp.clean_data()
     X_train, X_test, y_train, y_test = dp.split_data()
@@ -79,4 +91,8 @@ if __name__ == '__main__':
     models = Models(X_train, y_train)
     xgb_model = models.get_xgb_model()
     y_pred = xgb_model.predict(X_test)
+    # forest_model = models.get_forest_model()
+    # y_pred = forest_model.predict(X_test)
+    # bayes_model = models.get_bayesian_model()
+    # y_pred = bayes_model.predict(X_test)
     print(evaluate_results(y_pred, y_test))

@@ -70,11 +70,12 @@ class Workspace:
         else:
             self.errors += 1
 
-    def summary(self, n):
+    def summary(self, n, visualize_tables=False):
         good_iterations = n - self.errors
         print("\nSummary\n----------")
         print(
             f"Ran {n} iterations on samples of {self.n_persons} people ({self.set_size}X{self.set_size})")
+        print(f"Total people checked: {n * self.n_persons}")
         print(f"Errors: {self.errors}")
         print(f"Average of {self.n_sick / good_iterations} infected per sample\n")
 
@@ -89,13 +90,13 @@ class Workspace:
 
         print(f"All sicks: {self.n_sick}")
         print(
-            f"Sum tests before {np.sum(self.all_tests_orig)}\nMean tests before {np.mean(self.all_tests_orig)} \nSD tests before {np.std(self.all_tests_orig)}")
+            f"Sum tests before {np.sum(self.all_tests_orig)}\nMean tests before {np.mean(self.all_tests_orig)} \nSD tests before {np.std(self.all_tests_orig)}\n")
         print(
             f"Sum tests after {np.sum(self.all_tests)}\nMean tests after {np.mean(self.all_tests)} \nSD tests after {np.std(self.all_tests)}")
-
-        for i, v in enumerate(self.all_infections):
-            print(f"iteration {i + 1}")
-            print(v)
+        if visualize_tables:
+            for i, v in enumerate(self.all_infections):
+                print(f"iteration {i + 1}")
+                print(v)
 
         print(self.infection_buildings)
 
@@ -286,14 +287,15 @@ class Workspace:
 
 
 if __name__ == "__main__":
-    data_path = 'data/corona_tested_individuals_ver_002.xlsx'
+    data_path = 'data/corona_tested_individuals_ver_003.xlsx'
     # model_names = ['xgb', 'logreg', 'bayes', 'forest']
     # for model_name in model_names:
-    ws = Workspace(data_path, set_size=8, model='xgb')
+    ws = Workspace(data_path, set_size=5, model='xgb')
     # ws.sample_test_set(n_iterations=100)
-    # date_input = 10
-    date_input = '2020-03-27'
-    end_date = '2020-04-05'
+    date_input = 10
+    # date_input = '2020-03-27'
+    # end_date = '2020-04-05'
     # date_input = ['2020-03-28', '2020-03-30', '2020-04-02']
     # ws.daily(date_input=date_input, end_date=end_date, matrices_sorted=True, display_other=False)
-    ws.examine_entire_test_set()
+    ws.daily(date_input=date_input, matrices_sorted=True, display_other=False)
+    # ws.examine_entire_test_set()

@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 from sklearn.model_selection import train_test_split
+from collections import Counter
 
 
 class DataProcessor:
@@ -20,13 +21,43 @@ class DataProcessor:
         df.gender = df.gender.apply(lambda x: 1 if x == 'נקבה' else 0 if x == 'זכר' else None)
         df['was_abroad'] = df.test_indication.apply(lambda x: 1 if x == 'Abroad' else 0)
         df['had_contact'] = df.test_indication.apply(lambda x: 1 if x == 'Contact with confirmed' else 0)
+        # df['had_other'] = df.test_indication.apply(lambda x: 1 if x == 'Other' else 0)
         self.df_dates = df.drop(columns=['test_indication'])
         self.all_dates = self.df_dates.test_date.unique()
         self.processed_df = df.drop(columns=['test_date', 'test_indication'])
-        # Drop NA TODO: אולי לא לזרוק
         df_no_na = self.processed_df.dropna()
         # Convert to numpy array
         self.np_data = np.array(df_no_na)
+        # self.np_data = self.fill_na(self.processed_df, df_no_na)
+
+    def fill_na(self, df, df_no_na):
+        c_gen = Counter(df_no_na.gender)
+        gen0 = c_gen[0] / (c_gen[0] + c_gen[1])
+        gen1 = 1 - gen0
+
+        c_age = Counter(df_no_na.age_60_and_above)
+        age0 = c_age[0] / (c_age[0] + c_age[1])
+        age1 = 1 - age0
+
+        df_filled_na = df.copy()
+
+        # df_filled_na.head()
+        def gender_fill_na(x):
+            if np.isnan(x):
+                x = np.random.choice([0, 1], p=[gen0, gen1])
+            return x
+
+        def age_fill_na(x):
+            if np.isnan(x):
+                x = np.random.choice([0, 1], p=[age0, age1])
+            return x
+
+        df_filled_na.gender = df_filled_na.gender.transform(gender_fill_na)
+        df_filled_na.age_60_and_above = df_filled_na.age_60_and_above.transform(
+            age_fill_na)
+        df_filled_na = df_filled_na.fillna(0)
+        np_df_filled = np.array(df_filled_na)
+        return np_df_filled
 
     def get_daily_data(self, date_input, end_date=np.datetime64('today')):
         if type(date_input) == int:
@@ -46,7 +77,7 @@ class DataProcessor:
             data_by_day[day] = np_df_day
         return data_by_day
 
-    def split_data(self, test_size=0.33, random_state=42):
+    def split_data(self, test_size=0.3, random_state=42):
         # Split data
         X = self.np_data[:, 1:]
         Y = self.np_data[:, 0]

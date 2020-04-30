@@ -168,6 +168,7 @@ class Workspace:
             labels = [str(k)[:10] for k in list(graph_data_per_day.keys())]
             prims = [d['n_tests_prim' + suffix] for d in graph_data_per_day.values()]
             evens = [d['n_tests' + suffix] for d in graph_data_per_day.values()]
+            # evens = [d['n_tests_unsorted'] for d in graph_data_per_day.values()]
             nopool = [d['total_people'] for d in graph_data_per_day.values()]
 
             width = 0.35  # the width of the bars
@@ -211,12 +212,22 @@ class Workspace:
         if display_other:
             prims_sorted, evens_sorted, prims_unsorted, evens_unsorted, \
             nopool = bar_data
-            print(f"Days: {list(graph_data_per_day.keys())}")
+            all_days = list(graph_data_per_day.keys())
+            print(f"Days: {all_days}")
             print(f"No pooling sorted: {nopool}")
             print(f"Original pooling sorted: {prims_sorted}")
             print(f"Rearranged pooling sorted: {evens_sorted}")
             print(f"Original pooling unsorted: {prims_unsorted}")
             print(f"Rearranged pooling unsorted: {evens_unsorted}")
+
+            ratio = np.array(evens_sorted) / np.array(prims_unsorted)
+            goal = 0.6
+            great_days = np.where(ratio < goal)[0]
+            if great_days:
+                print(great_days)
+                print(f'Number of days with improvement more than {goal * 100}%: {len(great_days)}')
+                for day in great_days:
+                    print(all_days[day])
 
         else:
             nopool, prims, evens = bar_data
@@ -297,5 +308,5 @@ if __name__ == "__main__":
     # end_date = '2020-04-05'
     # date_input = ['2020-03-28', '2020-03-30', '2020-04-02']
     # ws.daily(date_input=date_input, end_date=end_date, matrices_sorted=True, display_other=False)
-    ws.daily(date_input=date_input, matrices_sorted=True, display_other=False)
+    ws.daily(date_input=date_input, matrices_sorted=True, display_other=True)
     # ws.examine_entire_test_set()

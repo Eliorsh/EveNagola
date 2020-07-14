@@ -3,19 +3,28 @@ import pandas as pd
 from sklearn.model_selection import train_test_split
 from collections import Counter
 
+# source: https://data.gov.il/dataset/covid-19
 
 class DataProcessor:
     def __init__(self, path):
         # Load data
-        self.df = pd.read_excel(path)
+        _, file_type = path.split('.')
+        if 'xls' in file_type:
+            self.df = pd.read_excel(path)
+        elif file_type == 'csv':
+            self.df = pd.read_csv(path)
+        else:
+            raise TypeError("MA ZE?")
         self.processed_df = None
         self.df_dates = None
         self.np_data = None
         self.test_data = None
 
-    def clean_data(self):
+    def clean_data(self, flip=False):
         # Data cleaning
         df = self.df[self.df.corona_result != 'אחר']
+        if flip:
+            df = df[::-1]
         df.corona_result = df.corona_result.apply(lambda x: 1 if x == 'חיובי' else 0)
         df.age_60_and_above = df.age_60_and_above.apply(lambda x: 1 if x == 'Yes' else 0 if x == 'No' else None)
         df.gender = df.gender.apply(lambda x: 1 if x == 'נקבה' else 0 if x == 'זכר' else None)
@@ -61,7 +70,8 @@ class DataProcessor:
 
     def get_daily_data(self, date_input, end_date=np.datetime64('today')):
         if type(date_input) == int:
-            plot_days = self.all_dates[-date_input:]
+            # plot_days = self.all_dates[-date_input:]
+            plot_days = self.all_dates[:date_input]
         elif type(date_input) in [np.datetime64, str]:
             plot_days = np.arange(date_input, np.datetime64(end_date) + 1,
                                   dtype='datetime64[D]')
@@ -72,8 +82,9 @@ class DataProcessor:
         for day in plot_days:
             df_day = self.df_dates[self.df_dates.test_date == day]
             df_day = df_day.drop(columns=['test_date'])
-            df_day_no_na = df_day.dropna()
-            np_df_day = np.array(df_day_no_na)
+            # df_day_no_na = df_day.dropna()
+            # np_df_day = np.array(df_day_no_na)
+            np_df_day = np.array(df_day)
             data_by_day[day] = np_df_day
         return data_by_day
 

@@ -10,9 +10,9 @@ from person_classes import People, PersonSet
 
 
 class Workspace:
-    def __init__(self, data_path, set_size, model=DEFAULT_MODEL):
+    def __init__(self, data_path, set_size, model=DEFAULT_MODEL, flip=False):
         self.dp = DataProcessor(data_path)
-        self.dp.clean_data()
+        self.dp.clean_data(flip)
         self.n_days_available = len(self.dp.all_dates)
         X_train, X_test, y_train, y_test = self.dp.split_data()
         models = Models(X_train, y_train)
@@ -298,15 +298,17 @@ class Workspace:
 
 
 if __name__ == "__main__":
-    data_path = 'data/corona_tested_individuals_ver_003.xlsx'
+    # data_path = 'data/corona_tested_individuals_ver_003.xlsx'
+    data_path = 'data/corona_tested_individuals_ver_0034.csv'
     # model_names = ['xgb', 'logreg', 'bayes', 'forest']
     # for model_name in model_names:
-    ws = Workspace(data_path, set_size=5, model='xgb')
+    flip = False if int(data_path.split('.')[0][-3:]) > 5 else True
+    ws = Workspace(data_path, set_size=5, model='xgb', flip=flip)
     # ws.sample_test_set(n_iterations=100)
-    date_input = 10
+    date_input = 110
     # date_input = '2020-03-27'
     # end_date = '2020-04-05'
     # date_input = ['2020-03-28', '2020-03-30', '2020-04-02']
-    # ws.daily(date_input=date_input, end_date=end_date, matrices_sorted=True, display_other=False)
-    ws.daily(date_input=date_input, matrices_sorted=True, display_other=True)
-    # ws.examine_entire_test_set()
+    # ws.daily(date_input=date_input, end_date=end_date, matrices_sorted=True, display_other=True)
+    # ws.daily(date_input=date_input, matrices_sorted=True, display_other=True)
+    ws.examine_entire_test_set()

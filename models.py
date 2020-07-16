@@ -2,7 +2,7 @@ from xgboost import XGBClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.naive_bayes import GaussianNB
 from sklearn.ensemble import RandomForestClassifier
-
+import numpy as np
 from data_reader import DataProcessor
 
 DEFAULT_MODEL = 'xgb'
@@ -61,6 +61,12 @@ class Models:
         print("using forest model")
         return forest_model
 
+
+class MockModel:
+    @staticmethod
+    def predict_proba(data):
+        return np.zeros((1,2))
+
 def evaluate_results(pred, y_test):
     TN = 0
     TP = 0
@@ -83,7 +89,7 @@ def evaluate_results(pred, y_test):
 
 
 if __name__ == '__main__':
-    data_path = 'data/corona_tested_individuals_ver_003.xlsx'
+    data_path = 'data/corona_tested_individuals_ver_005.xlsx'
     dp = DataProcessor(data_path)
     dp.clean_data()
     X_train, X_test, y_train, y_test = dp.split_data()

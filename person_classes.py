@@ -1,5 +1,7 @@
 import numpy as np
 
+from models import MockModel
+
 
 class Person:
     def __init__(self, model, id, is_infected, cough, fever, sore_throat, shortness_of_breath,
@@ -42,10 +44,10 @@ class Person:
 class People:
     def __init__(self, model=None, load=None):
         self.model = model
-        if load.any():
+        if load is not None:
             self.people = self.load_people_from_csv(load)
         else:
-            self.people = self.generate_random_people()
+            self.people = []
         self.used_people = []
 
     def __len__(self):
@@ -58,8 +60,18 @@ class People:
             people.append(Person(self.model, i, *p)) # * splits the list to individual parameters
         return people
 
-    def generate_random_people(self):
-        return []
+    def generate_random_people(self, n=10000, p_sick=0.08):
+        people = []
+        for i in range(n):
+            features = [np.random.choice([0,1], p=[0.7, 0.3]) for _ in range(10)]
+            person = Person(MockModel, i, *features)
+            person.is_infected = np.random.choice([0,1], p=[1-p_sick, p_sick])
+            if person.is_infected:
+                person.danger_level = np.random.normal(0.8, 0.1, 1)[0]
+            else:
+                person.danger_level = np.random.normal(0.5, 0.3, 1)[0]
+            people.append(person)
+        self.people = people
 
     def get_people_sample(self, n, no_reuse=False):
         if no_reuse:

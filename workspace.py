@@ -75,9 +75,11 @@ class Workspace:
         print("\nSummary\n----------")
         print(
             f"Ran {n} iterations on samples of {self.n_persons} people ({self.set_size}X{self.set_size})")
-        print(f"Total people checked: {n * self.n_persons}")
+        total_checked = n * self.n_persons
+        print(f"Total people checked: {total_checked}")
         print(f"Errors: {self.errors}")
-        print(f"Average of {self.n_sick / good_iterations} infected per sample\n")
+        avg_sick = self.n_sick / good_iterations
+        print(f"Average of {avg_sick} infected per sample\n")
 
         perc_better = self.count_better * 100.0 / good_iterations
         perc_same = self.count_same * 100.0 / good_iterations
@@ -89,16 +91,37 @@ class Workspace:
             f"Set worse than OriginalSet in {self.count_worse * 100.0 / good_iterations} % of times!")
 
         print(f"All sicks: {self.n_sick}")
+        sum_tests_before = np.sum(self.all_tests_orig)
+        mean_tests_before = np.mean(self.all_tests_orig)
+        std_tests_before = np.std(self.all_tests_orig)
         print(
-            f"Sum tests before {np.sum(self.all_tests_orig)}\nMean tests before {np.mean(self.all_tests_orig)} \nSD tests before {np.std(self.all_tests_orig)}\n")
+            f"Sum tests before {sum_tests_before}\nMean tests before {mean_tests_before} \nSD tests before {std_tests_before}\n")
+        sum_tests_after = np.sum(self.all_tests)
+        mean_tests_after = np.mean(self.all_tests)
+        std_tests_after = np.std(self.all_tests)
         print(
-            f"Sum tests after {np.sum(self.all_tests)}\nMean tests after {np.mean(self.all_tests)} \nSD tests after {np.std(self.all_tests)}")
+            f"Sum tests after {sum_tests_after}\nMean tests after {mean_tests_after} \nSD tests after {std_tests_after}")
         if visualize_tables:
             for i, v in enumerate(self.all_infections):
                 print(f"iteration {i + 1}")
                 print(v)
 
         print(self.infection_buildings)
+        return {'n': n,
+                'set_size': self.set_size,
+                'total_checked': total_checked,
+                'errors': self.errors,
+                'avg_sick': avg_sick,
+                'perc_better': perc_better,
+                'perc_same': perc_same,
+                'sum_tests_before': sum_tests_before,
+                'mean_tests_before': mean_tests_before,
+                'std_tests_before': std_tests_before,
+                'sum_tests_after': sum_tests_after,
+                'mean_tests_after': mean_tests_after,
+                'std_tests_after': std_tests_after,
+                'all_infections': self.all_infections
+                }
 
     def graph_heatmap(self):
         fig = plt.figure(figsize=(16, 8))
@@ -124,6 +147,8 @@ class Workspace:
             ax2 = fig.add_subplot(2, 2, fig_n)
             ax2.set_title(f'Heatmap - {name}')
             # cmap='hot'
+            # cmap='Blues'
+            # cmap='viridis'
             im = ax2.imshow(building, cmap='viridis', interpolation='nearest',
                             vmax=np.max(self.infection_buildings))
             plt.colorbar(im)
@@ -272,6 +297,68 @@ class Workspace:
         self.summary(len(matrices))
         self.graph_heatmap()
 
+    def examine_simulation_set(self, n, p_sick):
+        self.reset_variables()
+        all_people = People()
+        all_people.generate_random_people(n, p_sick)
+        matrices, unused_people = self.arrange_person_matrices(all_people)
+        for matrix in tqdm(matrices):
+            self.work(matrix, randomize_orig=True)
+        print(f"{len(unused_people)} were omitted")
+        self.summary(len(matrices))
+        self.graph_heatmap()
+
+    def compare_simulations(self, n, p_sicks, curve=False, disp_nopool=True):
+        summaries = {}
+        for p_sick in p_sicks:
+            self.reset_variables()
+            all_people = People()
+            all_people.generate_random_people(n, p_sick)
+            matrices, unused_people = self.arrange_person_matrices(all_people)
+            for matrix in tqdm(matrices):
+                self.work(matrix, randomize_orig=True)
+            print(f"{len(unused_people)} were omitted")
+            summaries[p_sick] = self.summary(len(matrices))
+        fig, ax = plt.subplots()
+        nopool = [n for p_sick in p_sicks]
+        prims_unsorted = [summaries[p_sick]['sum_tests_before'] for p_sick in p_sicks]
+        evens_sorted = [summaries[p_sick]['sum_tests_after'] for p_sick in p_sicks]
+
+        width = 0.30  # the width of the bars
+        offset = 0.1
+        x = np.arange(len(p_sicks))  # the label locations
+
+        if curve:
+            width = 0  # the width of the bars
+            offset = 0
+            # x = np.arange(len(p_sicks))
+            if disp_nopool:
+                ax.plot(x, nopool, 'r', label='No pooling')
+            ax.plot(x, prims_unsorted, 'g', label='Original pooling')
+            ax.plot(x, evens_sorted, 'b', label='Rearranged pooling')
+            plt.grid()
+
+        else:
+            n_bars = 2
+            if disp_nopool:
+                # n_bars += 1
+                rects1 = ax.bar(x + offset, nopool, width - offset,
+                                label='No pooling')
+            rects2 = ax.bar(x + width + offset, prims_unsorted, width - offset,
+                            label='Original pooling')
+            rects3_ = ax.bar(x + n_bars * width + offset, evens_sorted, width - offset,
+                             label='Rearranged pooling')
+
+        ax.set_ylabel('Number of tests')
+        ax.set_title(
+            f'Number of tests by infection rate and pooling method ({n} people)\n')
+        ax.set_xticks(x + width + offset)
+        ax.set_xticklabels(p_sicks, rotation=45)
+        ax.set_xlabel('Infection rate')
+        ax.legend()
+        plt.show()
+
+
     def arrange_person_matrices(self, people, risk_sorted=True):
         if risk_sorted:
             people_order = people.sort_by_risk()
@@ -299,16 +386,21 @@ class Workspace:
 
 if __name__ == "__main__":
     # data_path = 'data/corona_tested_individuals_ver_003.xlsx'
-    data_path = 'data/corona_tested_individuals_ver_0034.csv'
+    data_path = 'data/corona_tested_individuals_ver_0036.csv'
     # model_names = ['xgb', 'logreg', 'bayes', 'forest']
     # for model_name in model_names:
     flip = False if int(data_path.split('.')[0][-3:]) > 5 else True
-    ws = Workspace(data_path, set_size=5, model='xgb', flip=flip)
-    # ws.sample_test_set(n_iterations=100)
-    date_input = 110
-    # date_input = '2020-03-27'
-    # end_date = '2020-04-05'
+    ws = Workspace(data_path, set_size=6, model='xgb', flip=flip)
+    # ws.sample_test_set(n_iterations=10)
+    date_input = 120
+    # date_input = '2020-03-11' #27
+    # end_date = '2020-03-31'
+
+    # date_input = '2020-04-01'
+    # end_date = '2020-04-30'
     # date_input = ['2020-03-28', '2020-03-30', '2020-04-02']
-    # ws.daily(date_input=date_input, end_date=end_date, matrices_sorted=True, display_other=True)
-    # ws.daily(date_input=date_input, matrices_sorted=True, display_other=True)
+    # ws.daily(date_input=date_input, end_date=end_date, matrices_sorted=True, display_other=False)
+    # ws.daily(date_input=date_input, matrices_sorted=True, display_other=False)
     ws.examine_entire_test_set()
+    # ws.examine_simulation_set(10000, 0.05)
+    # ws.compare_simulations(10000, [0.01, 0.05, 0.10, 0.15, 0.2], curve=True, disp_nopool=True)

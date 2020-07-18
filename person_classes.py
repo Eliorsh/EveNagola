@@ -2,6 +2,9 @@ import numpy as np
 
 from models import MockModel
 
+HIGH_TRESHOLD = 0.8
+LOW_TRESHOLD = 0.5
+LABELS_VALUES = {'RED': 3, 'YELLOW:': 2, 'GREEN': 1}
 
 class Person:
     def __init__(self, model, id, is_infected, cough, fever, sore_throat, shortness_of_breath,
@@ -13,6 +16,7 @@ class Person:
                  'head_ache', 'age_60_and_above', 'gender', 'was_abroad', 'had_contact'])
         self.is_infected = is_infected
         self.danger_level = self.set_danger_level(model)
+        self.label = self.get_danger_label(self.danger_level)
         # self.is_infected = self.set_infection()
 
     def __repr__(self):
@@ -24,6 +28,7 @@ class Person:
             features_repr += f'{self.feature_names[i]} = {self.features[i]}\n'
         more_repr = f"""
                 danger_level = {self.danger_level}
+                label = {self.label}
                 is_infected  = {self.is_infected}
                 """
         return '\n'.join([id_repr, features_repr, more_repr])
@@ -36,6 +41,13 @@ class Person:
         #     return (not self.is_infected) * 100
         person_data = self.features.reshape((1, len(self.features)))
         return model.predict_proba(person_data)[0, 1] * 100
+
+    def get_danger_label(self, danger_level, t1=HIGH_TRESHOLD, t2=None):
+        if danger_level > t1:
+            return 'RED'
+        if t2 and danger_level > t2:
+            return 'YELLOW'
+        return 'GREEN'
     #
     # def set_infection(self):
     #     return np.random.randint(1, 100) < self.danger_level
@@ -83,8 +95,15 @@ class People:
         else:
             return np.random.choice(self.people, n, replace=False)
 
-    def sort_by_risk(self, reverse=True):
-        return sorted(self.people, key=lambda x: x.danger_level, reverse=reverse)
+    def sort_by_risk(self, reverse=True, use_labels=False):
+        if use_labels:
+            return sorted(self.people,
+                          key=lambda x: LABELS_VALUES.get(x.label, 1),
+                          reverse=reverse)
+        else:
+            return sorted(self.people,
+                          key=lambda x: x.danger_level,
+                          reverse=reverse)
 
     def get_people_list(self, randomize=False):
         if randomize:
@@ -141,8 +160,15 @@ class PersonSet:
         else:
             print(f"person id {person.id} already in set")
 
-    def sort_persons_by_danger(self):
-        self.persons = sorted(self.persons, key=lambda p: p.danger_level, reverse=True)
+    def sort_persons_by_danger(self, use_labels=False):
+        if use_labels:
+            self.persons = sorted(self.persons,
+                                  key=lambda p: LABELS_VALUES.get(p.label, 1),
+                                  reverse=True)
+        else:
+            self.persons = sorted(self.persons,
+                                  key=lambda p: p.danger_level,
+                                  reverse=True)
 
     def build(self):
         for i in range(self.size):
@@ -152,8 +178,8 @@ class PersonSet:
                 self.infection_set[i, j] = person.is_infected
                 self.danger_set[i, j] = person.danger_level
 
-    def arrange(self):
-        self.sort_persons_by_danger()
+    def arrange(self, use_labels):
+        self.sort_persons_by_danger(use_labels=use_labels)
         self.build()
 
     def derrange(self):

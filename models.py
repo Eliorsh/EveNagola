@@ -1,3 +1,5 @@
+import glob
+
 from xgboost import XGBClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.naive_bayes import GaussianNB
@@ -87,18 +89,36 @@ def evaluate_results(pred, y_test):
             'False Positive': FP, 'recall': TP / (TP + FN),
             'precision': TP / (TP + FP)}
 
-
-if __name__ == '__main__':
-    data_path = 'data/corona_tested_individuals_ver_005.xlsx'
+def evaluate_model(model, data_path):
     dp = DataProcessor(data_path)
     dp.clean_data()
     X_train, X_test, y_train, y_test = dp.split_data()
-
     models = Models(X_train, y_train)
-    xgb_model = models.get_xgb_model()
-    y_pred = xgb_model.predict(X_test)
-    # forest_model = models.get_forest_model()
-    # y_pred = forest_model.predict(X_test)
-    # bayes_model = models.get_bayesian_model()
-    # y_pred = bayes_model.predict(X_test)
-    print(evaluate_results(y_pred, y_test))
+    model = models.get_model(model)
+    y_pred = model.predict(X_test)
+    results = evaluate_results(y_pred, y_test)
+    return results
+
+def compare_model_on_datasets(model, ds_dir):
+    datasets = glob.glob(f'{ds_dir}/*')
+    all_results = {}
+    for ds in datasets:
+        ds = ds[2:]
+        ds_num = ds.split('.')[0].split('_')[-1]
+        all_results[ds_num] = evaluate_model(model, ds)
+    sorted_nums = sorted(all_results.keys(), key=int)
+    recalls = [all_results[num]['recall'] for num in sorted_nums]
+    precisions = [all_results[num]['precision'] for num in sorted_nums]
+    return all_results, recalls, precisions
+
+if __name__ == '__main__':
+    data_path = 'data/corona_tested_individuals_ver_0043.csv'
+    data_dir = './data'
+    model = 'xgb'
+    # print(evaluate_model(model, data_path))
+    all_results, recalls, precisions = compare_model_on_datasets(model, data_dir)
+    print(recalls)
+    print('-' * 50)
+    print(precisions)
+    print('='* 50)
+    print(all_results)

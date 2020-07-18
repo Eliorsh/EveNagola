@@ -35,7 +35,7 @@ class Workspace:
         self.infection_buildings_orig = np.zeros((self.set_size, self.set_size))
         self.all_infections = []
 
-    def work(self, people_sample, randomize_orig=False):
+    def work(self, people_sample, use_labels=False, randomize_orig=False):
         Set = PersonSet(size=self.set_size)
         for p in people_sample:
             # print(p)
@@ -44,7 +44,7 @@ class Workspace:
         OriginalSet = copy.deepcopy(Set)
         if randomize_orig:
             OriginalSet.derrange()
-        Set.arrange()
+        Set.arrange(use_labels)
         # print(Set)
         Set.find()
         self.all_infections.append(Set.view_infections())
@@ -216,7 +216,7 @@ class Workspace:
             return nopool, prims, evens
 
     def daily(self, date_input, end_date=np.datetime64('today'),
-              matrices_sorted=True, display_other=False):
+              matrices_sorted=True, display_other=False, use_labels=False):
         # TODO: specific days instead of days_back
         data_by_day = self.dp.get_daily_data(date_input, end_date)
         graph_data_per_day = {}
@@ -226,10 +226,12 @@ class Workspace:
             print(f"Day: {day}")
             print(f"Loaded: {len(all_people)} people")
             graph_data_per_day[day] = self._one_day_work(all_people,
-                                                         matrices_sorted)
+                                                         matrices_sorted,
+                                                         use_labels)
             if display_other:
                 graph_data_per_day[day].update(self._one_day_work(all_people,
-                                                                  not matrices_sorted))
+                                                                  not matrices_sorted,
+                                                                  use_labels))
 
         bar_data = self.graph_days_barplot(graph_data_per_day,
                                            matrices_sorted=matrices_sorted,
@@ -261,12 +263,12 @@ class Workspace:
             print(f"Original pooling: {prims}")
             print(f"Rearranged pooling: {evens}")
 
-    def _one_day_work(self, all_people, matrices_sorted):
+    def _one_day_work(self, all_people, matrices_sorted, use_labels=False):
         self.reset_variables()
         matrices, unused_people = self.arrange_person_matrices(
-            all_people, risk_sorted=not matrices_sorted)
+            all_people, risk_sorted=not matrices_sorted, use_labels=use_labels)
         for matrix in tqdm(matrices):
-            self.work(matrix, randomize_orig=True)
+            self.work(matrix, use_labels=use_labels, randomize_orig=True)
         suffix = '_sorted' if matrices_sorted else '_unsorted'
         return {'n_sick': self.n_sick,
                 'total_people': len(all_people),
@@ -274,49 +276,53 @@ class Workspace:
                 'n_tests' + suffix: np.sum(self.all_tests),
                 }
 
-    def sample_test_set(self, n_iterations):
+    def sample_test_set(self, n_iterations, use_labels=False):
         self.reset_variables()
         # subjects = self.dp.get_all_data()
         subjects = self.dp.get_test_data()
         all_people = People(model=self.model, load=subjects)
         for j in tqdm(range(n_iterations)):
             people_sample = all_people.get_people_sample(self.n_persons, no_reuse=True)
-            self.work(people_sample)
+            self.work(people_sample, use_labels)
         self.summary(n_iterations)
         self.graph_heatmap()
 
-    def examine_entire_test_set(self):
+    def examine_entire_test_set(self, use_labels=False):
         self.reset_variables()
         # subjects = self.dp.get_all_data()
         subjects = self.dp.get_test_data()
         all_people = People(model=self.model, load=subjects)
-        matrices, unused_people = self.arrange_person_matrices(all_people)
+        matrices, unused_people = self.arrange_person_matrices(all_people,
+                                                               use_labels)
         for matrix in tqdm(matrices):
-            self.work(matrix, randomize_orig=True)
+            self.work(matrix, randomize_orig=True, use_labels=use_labels)
         print(f"{len(unused_people)} were omitted")
         self.summary(len(matrices))
         self.graph_heatmap()
 
-    def examine_simulation_set(self, n, p_sick):
+    def examine_simulation_set(self, n, p_sick, use_labels=False):
         self.reset_variables()
         all_people = People()
         all_people.generate_random_people(n, p_sick)
-        matrices, unused_people = self.arrange_person_matrices(all_people)
+        matrices, unused_people = self.arrange_person_matrices(all_people,
+                                                               use_labels)
         for matrix in tqdm(matrices):
-            self.work(matrix, randomize_orig=True)
+            self.work(matrix, randomize_orig=True, use_labels=use_labels)
         print(f"{len(unused_people)} were omitted")
         self.summary(len(matrices))
         self.graph_heatmap()
 
-    def compare_simulations(self, n, p_sicks, curve=False, disp_nopool=True):
+    def compare_simulations(self, n, p_sicks, curve=False, disp_nopool=True,
+                            use_labels=False):
         summaries = {}
         for p_sick in p_sicks:
             self.reset_variables()
             all_people = People()
             all_people.generate_random_people(n, p_sick)
-            matrices, unused_people = self.arrange_person_matrices(all_people)
+            matrices, unused_people = self.arrange_person_matrices(all_people,
+                                                                   use_labels)
             for matrix in tqdm(matrices):
-                self.work(matrix, randomize_orig=True)
+                self.work(matrix, randomize_orig=True, use_labels=False)
             print(f"{len(unused_people)} were omitted")
             summaries[p_sick] = self.summary(len(matrices))
         fig, ax = plt.subplots()
@@ -359,9 +365,10 @@ class Workspace:
         plt.show()
 
 
-    def arrange_person_matrices(self, people, risk_sorted=True):
+    def arrange_person_matrices(self, people, risk_sorted=True,
+                                use_labels=False):
         if risk_sorted:
-            people_order = people.sort_by_risk()
+            people_order = people.sort_by_risk(use_labels=use_labels)
         else:
             people_order = people.get_people_list(randomize=False)
         people_ids = [p.id for p in people_order]
@@ -386,13 +393,13 @@ class Workspace:
 
 if __name__ == "__main__":
     # data_path = 'data/corona_tested_individuals_ver_003.xlsx'
-    data_path = 'data/corona_tested_individuals_ver_0036.csv'
+    data_path = 'data/corona_tested_individuals_ver_0043.csv'
     # model_names = ['xgb', 'logreg', 'bayes', 'forest']
     # for model_name in model_names:
     flip = False if int(data_path.split('.')[0][-3:]) > 5 else True
     ws = Workspace(data_path, set_size=6, model='xgb', flip=flip)
     # ws.sample_test_set(n_iterations=10)
-    date_input = 120
+    date_input = 30
     # date_input = '2020-03-11' #27
     # end_date = '2020-03-31'
 
@@ -400,7 +407,7 @@ if __name__ == "__main__":
     # end_date = '2020-04-30'
     # date_input = ['2020-03-28', '2020-03-30', '2020-04-02']
     # ws.daily(date_input=date_input, end_date=end_date, matrices_sorted=True, display_other=False)
-    # ws.daily(date_input=date_input, matrices_sorted=True, display_other=False)
-    ws.examine_entire_test_set()
+    ws.daily(date_input=date_input, matrices_sorted=True, display_other=False, use_labels=True)
+    # ws.examine_entire_test_set(use_labels=True)
     # ws.examine_simulation_set(10000, 0.05)
     # ws.compare_simulations(10000, [0.01, 0.05, 0.10, 0.15, 0.2], curve=True, disp_nopool=True)

@@ -6,7 +6,7 @@ class Net(nn.Module):
         super(Net, self).__init__()
         self.layer1 = nn.Linear(9, 16)
         self.layer2 = nn.Linear(16, 32)
-        self.layer3 = nn.Linear(32, 64)httg
+        self.layer3 = nn.Linear(32, 64)
         self.layer4 = nn.Linear(64, 32)
         self.layer5 = nn.Linear(32, 16)
         self.layer6 = nn.Linear(16, 2)

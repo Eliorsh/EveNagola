@@ -196,12 +196,12 @@ class PersonSet:
         for i in range(self.size):
             if sum(compute_rows[i, :]) > 0:
                 compute_rows[i, [self.size]] = 1
-        row_pool = compute_rows[:, self.size]
+        row_pool = compute_rows[:, self.size]  # row indicator vector
 
         for j in range(self.size):
             if sum(compute_cols[:, j]) > 0:
                 compute_cols[self.size, [j]] = 1
-        col_pool = compute_cols[self.size, :]
+        col_pool = compute_cols[self.size, :]  # col indicator vector
         return row_pool, col_pool
 
     def find(self):
@@ -216,19 +216,66 @@ class PersonSet:
         #     tests_used += 1
 
         row_pool = list(row_pool)
+        # get row indexes of infected
         line_rows = [i for i in range((len(row_pool))) if row_pool[i] == 1]
 
         col_pool = list(col_pool)
+        # get col indexes of infected
         line_col = [i for i in range(len(col_pool)) if col_pool[i] == 1]
 
-        for row in line_rows:
-            for col in line_col:
-                if self.infection_set[row, col]:
-                    lst_of_sick.append((row, col))
-                if sum(row_pool) == 1 or sum(col_pool) == 1:
-                    # אין צורך בבדיקות נוספות
-                    continue
+        if sum(row_pool) == 1 or sum(col_pool) == 1:
+            # if test result positive
+            if self.infection_set[line_rows[0], line_col[0]]:
+                lst_of_sick.append((line_rows[0], line_col[0]))
+
+        elif sum(row_pool) == 2 and sum(col_pool) == 2:
+            tests_used += 1
+            if self.infection_set[min(line_rows), max(line_col)]:
+                # Positive results
+                lst_of_sick.append((min(line_rows), max(line_col)))
                 tests_used += 1
+                if self.infection_set[max(line_rows), min(line_col)]:
+                    lst_of_sick.append((max(line_rows), min(line_col)))
+                    tests_used += 2
+                    if self.infection_set[min(line_rows), min(line_col)]:
+                        lst_of_sick.append((min(line_rows), min(line_col)))
+                    if self.infection_set[max(line_rows), max(line_col)]:
+                        lst_of_sick.append((max(line_rows), max(line_col)))
+                else:
+                    lst_of_sick.append((min(line_rows), min(line_col)))
+                    lst_of_sick.append((max(line_rows), max(line_col)))
+
+            else:
+                # Negative results
+                lst_of_sick.append((min(line_rows), min(line_col)))
+                lst_of_sick.append((max(line_rows), max(line_col)))
+                tests_used += 1
+                if self.infection_set[max(line_rows), min(line_col)]:
+                    lst_of_sick.append((max(line_rows), min(line_col)))
+
+        else:
+            for row in line_rows:
+                for col in line_col:
+                    # if test result positive
+                    if self.infection_set[row, col]:
+                        lst_of_sick.append((row, col))
+                        tests_used += 1
+
+
+        # # go over all intersections
+        # for row in line_rows:
+        #     for col in line_col:
+        #         # if test result positive
+        #         if self.infection_set[row, col]:
+        #             lst_of_sick.append((row, col))
+        #         # caught by pooling - no further tests needed
+        #         if sum(row_pool) == 1 or sum(col_pool) == 1:
+        #             # אין צורך בבדיקות נוספות
+        #             continue
+        #         elif sum(row_pool) == 2 and sum(col_pool) == 2:
+        #             pass
+        #         # otherwise, an individual test is needed
+        #         tests_used += 1
 
         self.found_coords = lst_of_sick
         self.find_ids()

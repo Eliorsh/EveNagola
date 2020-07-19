@@ -29,6 +29,7 @@ class Workspace:
         self.count_worse = 0
         self.errors = 0
         self.n_sick = 0
+        self.n_sick_list = []
         self.all_tests = []
         self.all_tests_orig = []
         self.infection_buildings = np.zeros((self.set_size, self.set_size))
@@ -61,6 +62,7 @@ class Workspace:
 
         if Set.ids_found == OriginalSet.ids_found:
             self.n_sick += Set.n_found
+            self.n_sick_list.append(Set.n_found)
             self.all_tests.append(Set.tests_used)
             self.all_tests_orig.append(OriginalSet.tests_used)
             self.count_better += 1 if Set.tests_used < OriginalSet.tests_used else 0
@@ -79,7 +81,9 @@ class Workspace:
         print(f"Total people checked: {total_checked}")
         print(f"Errors: {self.errors}")
         avg_sick = self.n_sick / good_iterations
-        print(f"Average of {avg_sick} infected per sample\n")
+        print(f"Average of {avg_sick} infected per sample")
+        std_sick = np.std(self.n_sick_list)
+        print(f"St. dev. of {std_sick} infected per sample\n")
 
         perc_better = self.count_better * 100.0 / good_iterations
         perc_same = self.count_same * 100.0 / good_iterations
@@ -112,6 +116,7 @@ class Workspace:
                 'total_checked': total_checked,
                 'errors': self.errors,
                 'avg_sick': avg_sick,
+                'std_sick': std_sick,
                 'perc_better': perc_better,
                 'perc_same': perc_same,
                 'sum_tests_before': sum_tests_before,
@@ -407,7 +412,7 @@ if __name__ == "__main__":
     # end_date = '2020-04-30'
     # date_input = ['2020-03-28', '2020-03-30', '2020-04-02']
     # ws.daily(date_input=date_input, end_date=end_date, matrices_sorted=True, display_other=False)
-    ws.daily(date_input=date_input, matrices_sorted=True, display_other=False, use_labels=True)
-    # ws.examine_entire_test_set(use_labels=True)
+    # ws.daily(date_input=date_input, matrices_sorted=True, display_other=False, use_labels=True)
+    ws.examine_entire_test_set(use_labels=True)
     # ws.examine_simulation_set(10000, 0.05)
     # ws.compare_simulations(10000, [0.01, 0.05, 0.10, 0.15, 0.2], curve=True, disp_nopool=True)

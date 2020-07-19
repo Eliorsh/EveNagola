@@ -1,14 +1,16 @@
 import glob
 
+import torch
 from xgboost import XGBClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.naive_bayes import GaussianNB
 from sklearn.ensemble import RandomForestClassifier
 import numpy as np
 from data_reader import DataProcessor
+from neural.nn_models import Net
 
 DEFAULT_MODEL = 'xgb'
-
+NEURAL_MODEL_PATH = './neural/corn_model2.pt'
 
 class Models:
     def __init__(self, x, y):
@@ -19,6 +21,7 @@ class Models:
             'logreg': self.get_logreg_model,
             'bayes': self.get_bayesian_model,
             'forest': self.get_forest_model,
+            'neural': self.get_neural_model
         }
 
     def get_model(self, model):
@@ -62,6 +65,12 @@ class Models:
         forest_model.fit(self.x_train, self.y_train)
         print("using forest model")
         return forest_model
+
+    def get_neural_model(self):
+        net = Net()
+        net.load_state_dict(torch.load(NEURAL_MODEL_PATH))
+        print("using neural model")
+        return net
 
 
 class MockModel:

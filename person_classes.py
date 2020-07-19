@@ -225,8 +225,9 @@ class PersonSet:
 
         if sum(row_pool) == 1 or sum(col_pool) == 1:
             # if test result positive
-            if self.infection_set[line_rows[0], line_col[0]]:
-                lst_of_sick.append((line_rows[0], line_col[0]))
+            for row in line_rows:
+                for col in line_col:
+                    lst_of_sick.append((row, col))
 
         elif sum(row_pool) == 2 and sum(col_pool) == 2:
             tests_used += 1
@@ -259,7 +260,7 @@ class PersonSet:
                     # if test result positive
                     if self.infection_set[row, col]:
                         lst_of_sick.append((row, col))
-                        tests_used += 1
+                    tests_used += 1
 
 
         # # go over all intersections

@@ -68,15 +68,26 @@ class Models:
 
     def get_neural_model(self):
         net = Net()
-        net.load_state_dict(torch.load(NEURAL_MODEL_PATH))
         print("using neural model")
-        return net
+        return NeuralModel(net, NEURAL_MODEL_PATH)
 
 
 class MockModel:
     @staticmethod
     def predict_proba(data):
         return np.zeros((1,2))
+
+
+class NeuralModel:
+    def __init__(self, net, model_path):
+        self.net = net
+        self.net.load_state_dict(torch.load(model_path))
+
+    def predict(self, x):
+        pred = self.net(x)
+        prob, label = torch.topk(torch.nn.functional.softmax(pred), 2)
+        risk_profile = prob[1]
+        return risk_profile
 
 def evaluate_results(pred, y_test):
     TN = 0

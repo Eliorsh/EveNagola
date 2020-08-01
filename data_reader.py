@@ -70,8 +70,10 @@ class DataProcessor:
 
     def get_daily_data(self, date_input, end_date=np.datetime64('today')):
         if type(date_input) == int:
-            # plot_days = self.all_dates[-date_input:]
-            plot_days = self.all_dates[:date_input]
+            if date_input < 0:
+                plot_days = self.all_dates[date_input:]
+            else:
+                plot_days = self.all_dates[:date_input]
         elif type(date_input) in [np.datetime64, str]:
             plot_days = np.arange(date_input, np.datetime64(end_date) + 1,
                                   dtype='datetime64[D]')
@@ -80,7 +82,7 @@ class DataProcessor:
             plot_days = [np.datetime64(date) for date in plot_days]
         data_by_day = {}
         for day in plot_days:
-            df_day = self.df_dates[self.df_dates.test_date == day]
+            df_day = self.df_dates[self.df_dates.test_date == str(day)]
             df_day = df_day.drop(columns=['test_date'])
             # df_day_no_na = df_day.dropna()
             # np_df_day = np.array(df_day_no_na)

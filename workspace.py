@@ -1,6 +1,7 @@
 import numpy as np
 import copy
 import matplotlib.pyplot as plt
+import matplotlib as mpl
 from mpl_toolkits.mplot3d import Axes3D
 from tqdm import tqdm
 
@@ -397,6 +398,7 @@ class Workspace:
 
 
 if __name__ == "__main__":
+    mpl.use('qt5agg')
     # data_path = 'data/corona_tested_individuals_ver_003.xlsx'
     data_path = 'data/corona_tested_individuals_ver_0043.csv'
     # model_names = ['xgb', 'logreg', 'bayes', 'forest']
@@ -404,15 +406,15 @@ if __name__ == "__main__":
     flip = False if int(data_path.split('.')[0][-3:]) > 5 else True
     ws = Workspace(data_path, set_size=6, model='xgb', flip=flip)
     # ws.sample_test_set(n_iterations=10)
-    date_input = 30
+    date_input = 2
     # date_input = '2020-03-11' #27
     # end_date = '2020-03-31'
 
     # date_input = '2020-04-01'
-    # end_date = '2020-04-30'
+    # end_date = '2020-04-03'
     # date_input = ['2020-03-28', '2020-03-30', '2020-04-02']
     # ws.daily(date_input=date_input, end_date=end_date, matrices_sorted=True, display_other=False)
-    # ws.daily(date_input=date_input, matrices_sorted=True, display_other=False, use_labels=True)
-    ws.examine_entire_test_set(use_labels=True)
+    ws.daily(date_input=date_input, matrices_sorted=True, display_other=False, use_labels=True)
+    # ws.examine_entire_test_set(use_labels=True)
     # ws.examine_simulation_set(10000, 0.05)
     # ws.compare_simulations(10000, [0.01, 0.05, 0.10, 0.15, 0.2], curve=True, disp_nopool=True)

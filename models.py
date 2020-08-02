@@ -12,6 +12,7 @@ from neural.nn_models import Net
 DEFAULT_MODEL = 'xgb'
 NEURAL_MODEL_PATH = './neural/corn_model2.pt'
 
+
 class Models:
     def __init__(self, x, y):
         self.x_train = x
@@ -132,13 +133,13 @@ def compare_model_on_datasets(model, ds_dir):
     return all_results, recalls, precisions
 
 if __name__ == '__main__':
-    data_path = 'data/corona_tested_individuals_ver_0043.csv'
+    data_path = 'data/corona_tested_individuals_ver_0049.csv'
     data_dir = './data'
     model = 'xgb'
-    # print(evaluate_model(model, data_path))
-    all_results, recalls, precisions = compare_model_on_datasets(model, data_dir)
-    print(recalls)
-    print('-' * 50)
-    print(precisions)
-    print('='* 50)
-    print(all_results)
+    print(evaluate_model(model, data_path))
+    # all_results, recalls, precisions = compare_model_on_datasets(model, data_dir)
+    # print(recalls)
+    # print('-' * 50)
+    # print(precisions)
+    # print('='* 50)
+    # print(all_results)

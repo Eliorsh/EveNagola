@@ -181,16 +181,18 @@ class Workspace:
             rects2_ = ax.bar(x + 2*width + offset, prims_sorted, width - offset,
                              label='Original pooling - sorted')
             rects3 = ax.bar(x + 3*width + offset, evens_unsorted, width - offset,
-                            label='Rearranged pooling - unsorted')
+                            label='Mat-risk pooling - unsorted')
             rects3_ = ax.bar(x + 4*width + offset, evens_sorted, width - offset,
-                            label='Rearranged pooling - sorted')
+                            label='Mat-risk pooling - sorted')
 
             # Add some text for labels, title and custom x-axis tick labels, etc.
             ax.set_ylabel('Number of tests')
-            ax.set_title(f'Number of tests by day and pooling method - model: {self.model_name}')
+            ax.set_title('Number of tests by day and method')
+            # ax.set_title(f'Number of tests by day and pooling method - model: {self.model_name}')
             ax.set_xticks(x + 2*width + offset)
-            ax.set_xticklabels(labels, rotation=45)
+            ax.set_xticklabels(labels, rotation=90)
             ax.legend()
+            plt.grid(alpha=0.2, color='gray')
             plt.show()
             return prims_sorted, evens_sorted, prims_unsorted, evens_unsorted, \
                    nopool
@@ -210,20 +212,25 @@ class Workspace:
                             label='No pooling')
             rects2 = ax.bar(x, prims, width - offset, label='Original pooling')
             rects3 = ax.bar(x + width - offset, evens, width - offset,
-                            label='Rearranged pooling')
+                            label='Mat-risk pooling')
 
             # Add some text for labels, title and custom x-axis tick labels, etc.
             ax.set_ylabel('Number of tests')
-            ax.set_title(f'Number of tests by day and pooling method - model: {self.model_name}')
+            ax.set_title('Number of tests by day and method')
+            # ax.set_title(f'Number of tests by day and pooling method - model: {self.model_name}')
             ax.set_xticks(x)
-            ax.set_xticklabels(labels, rotation=45)
+            ax.set_xticklabels(labels, rotation=90)
             ax.legend()
+            plt.grid(alpha=0.2, color='gray')
             plt.show()
             return nopool, prims, evens
 
     def daily(self, date_input, end_date=np.datetime64('today'),
               matrices_sorted=True, display_other=False, use_labels=False):
         # TODO: specific days instead of days_back
+        last_df_date = np.datetime64(max(self.dp.df.test_date))
+        if np.datetime64(end_date) > last_df_date:
+            end_date = last_df_date
         data_by_day = self.dp.get_daily_data(date_input, end_date)
         graph_data_per_day = {}
         for day, day_data in data_by_day.items():
@@ -249,9 +256,9 @@ class Workspace:
             print(f"Days: {all_days}")
             print(f"No pooling sorted: {nopool}")
             print(f"Original pooling sorted: {prims_sorted}")
-            print(f"Rearranged pooling sorted: {evens_sorted}")
+            print(f"Mat-risk pooling sorted: {evens_sorted}")
             print(f"Original pooling unsorted: {prims_unsorted}")
-            print(f"Rearranged pooling unsorted: {evens_unsorted}")
+            print(f"Mat-risk pooling unsorted: {evens_unsorted}")
 
             ratio = np.array(evens_sorted) / np.array(prims_unsorted)
             goal = 0.6
@@ -267,7 +274,7 @@ class Workspace:
             print(f"Days: {list(graph_data_per_day.keys())}")
             print(f"No pooling: {nopool}")
             print(f"Original pooling: {prims}")
-            print(f"Rearranged pooling: {evens}")
+            print(f"Mar-risk pooling: {evens}")
 
     def _one_day_work(self, all_people, matrices_sorted, use_labels=False):
         self.reset_variables()
@@ -347,7 +354,7 @@ class Workspace:
             if disp_nopool:
                 ax.plot(x, nopool, 'r', label='No pooling')
             ax.plot(x, prims_unsorted, 'g', label='Original pooling')
-            ax.plot(x, evens_sorted, 'b', label='Rearranged pooling')
+            ax.plot(x, evens_sorted, 'b', label='Mat-risk pooling')
             plt.grid()
 
         else:
@@ -359,13 +366,13 @@ class Workspace:
             rects2 = ax.bar(x + width + offset, prims_unsorted, width - offset,
                             label='Original pooling')
             rects3_ = ax.bar(x + n_bars * width + offset, evens_sorted, width - offset,
-                             label='Rearranged pooling')
+                             label='Mat-risk pooling')
 
         ax.set_ylabel('Number of tests')
         ax.set_title(
             f'Number of tests by infection rate and pooling method ({n} people)\n')
         ax.set_xticks(x + width + offset)
-        ax.set_xticklabels(p_sicks, rotation=45)
+        ax.set_xticklabels(p_sicks, rotation=90)
         ax.set_xlabel('Infection rate')
         ax.legend()
         plt.show()
@@ -400,21 +407,23 @@ class Workspace:
 if __name__ == "__main__":
     mpl.use('qt5agg')
     # data_path = 'data/corona_tested_individuals_ver_003.xlsx'
-    data_path = 'data/corona_tested_individuals_ver_0043.csv'
+    # data_path = 'data/corona_tested_individuals_ver_005.csv'
+    data_path = 'data/corona_tested_individuals_ver_0049.csv'
     # model_names = ['xgb', 'logreg', 'bayes', 'forest']
     # for model_name in model_names:
     flip = False if int(data_path.split('.')[0][-3:]) > 5 else True
     ws = Workspace(data_path, set_size=6, model='xgb', flip=flip)
     # ws.sample_test_set(n_iterations=10)
-    date_input = 2
+    date_input = 10
     # date_input = '2020-03-11' #27
     # end_date = '2020-03-31'
 
     # date_input = '2020-04-01'
-    # end_date = '2020-04-03'
+    # end_date = '2020-03-13'
+    # end_date = '2020-04-24'
     # date_input = ['2020-03-28', '2020-03-30', '2020-04-02']
-    # ws.daily(date_input=date_input, end_date=end_date, matrices_sorted=True, display_other=False)
-    ws.daily(date_input=date_input, matrices_sorted=True, display_other=False, use_labels=True)
-    # ws.examine_entire_test_set(use_labels=True)
+    # ws.daily(date_input=date_input, end_date=end_date, matrices_sorted=True, display_other=False, use_labels=False)
+    # ws.daily(date_input=date_input, matrices_sorted=True, display_other=False, use_labels=False)
+    # ws.examine_entire_test_set(use_labels=False)
     # ws.examine_simulation_set(10000, 0.05)
-    # ws.compare_simulations(10000, [0.01, 0.05, 0.10, 0.15, 0.2], curve=True, disp_nopool=True)
+    ws.compare_simulations(15000, [0.01, 0.05, 0.10, 0.15, 0.2], curve=True, disp_nopool=False)

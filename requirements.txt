@@ -21,7 +21,6 @@ scikit-learn==0.23.1
 scipy==1.5.2
 six==1.15.0
 threadpoolctl==2.1.0
-torch==1.5.1
 tqdm==4.48.0
 Werkzeug==1.0.1
 xgboost==1.1.1

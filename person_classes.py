@@ -2,9 +2,9 @@ import numpy as np
 
 from models import MockModel
 
-HIGH_TRESHOLD = 0.8
-LOW_TRESHOLD = 0.5
-LABELS_VALUES = {'RED': 3, 'YELLOW:': 2, 'GREEN': 1}
+HIGH_TRESHOLD = 80
+LOW_TRESHOLD = 50
+LABELS_VALUES = {'RED': 2, 'YELLOW:': 1, 'GREEN': 0}
 
 class Person:
     def __init__(self, model, id, is_infected, cough, fever, sore_throat, shortness_of_breath,

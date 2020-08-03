@@ -13,14 +13,14 @@ DATA_PATH = 'data/corona_tested_individuals_ver_0049.csv'
 @app.route('/predict', methods=['post'])
 def predict():
     req_data = request.get_json()
-    print(req_data)
-    model = get_model(DATA_PATH, 'xgb')
+    # print(req_data)
+    # {"gender": 1, "isCoughing": 0, "isFever": 1, "isThroatAche": 0,
+    #  "isHeadAche": 0, "isTroubleBreathing": 0, "isOver60": 0,
+    #  "isReturningFromAbroad": 0, "isContactedInfected": 0}
 
     if req_data is None:
         return {'success': False, 'error': 'empty body request'}
-    # {"gender": 0, "isCoughing": true, "isFever": false, "isThroatAche": false,
-    #  "isHeadAche": false, "isTroubleBreathing": true, "isOver60": false,
-    #  "isReturningFromTravel": false, "isContactedInfected": false}
+
     features = process_data(req_data)
 
     if None in features:
@@ -29,17 +29,10 @@ def predict():
     if len(features) < N_FEATURES:
         return {'success': False, 'error': 'request missing feature'}
 
+    model = get_model(DATA_PATH, 'xgb')
     score = set_danger_level(model, features)
     label = get_danger_label(score, HIGH_TRESHOLD, LOW_TRESHOLD)
     return {'success': True, 'error': None, 'label': label, 'score':score}
-
-def get_model(data_path, model_name='xgb'):
-    flip = False if int(data_path.split('.')[0][-3:]) > 5 else True
-    dp = DataProcessor(data_path)
-    dp.clean_data(flip)
-    X_train, X_test, y_train, y_test = dp.split_data()
-    models = Models(X_train, y_train)
-    return models.get_model(model_name)
 
 def process_data(req_data):
     features = np.array([req_data.get('isCoughing'),
@@ -52,6 +45,14 @@ def process_data(req_data):
                          req_data.get('isReturningFromAbroad'),
                          req_data.get('isContactedInfected')])
     return features
+
+def get_model(data_path, model_name='xgb'):
+    flip = False if int(data_path.split('.')[0][-3:]) > 5 else True
+    dp = DataProcessor(data_path)
+    dp.clean_data(flip)
+    X_train, X_test, y_train, y_test = dp.split_data()
+    models = Models(X_train, y_train)
+    return models.get_model(model_name)
 
 def set_danger_level(model, features):
     person_data = features.reshape((1, len(features)))

@@ -29,7 +29,6 @@ def predict():
     if len(features) < N_FEATURES:
         return {'success': False, 'error': 'request missing feature'}
 
-    model = get_model(DATA_PATH, 'xgb')
     score = set_danger_level(model, features)
     label = get_danger_label(score, HIGH_TRESHOLD, LOW_TRESHOLD)
     return {'success': True, 'error': None, 'label': label, 'score':score}
@@ -66,4 +65,5 @@ def get_danger_label(danger_level, t1=HIGH_TRESHOLD, t2=None):
     return 0
 
 if __name__ == '__main__':
+    model = get_model(DATA_PATH, 'xgb')
     app.run()

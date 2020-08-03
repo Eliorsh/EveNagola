@@ -1,13 +1,13 @@
 import glob
 
-import torch
+# import torch
 from xgboost import XGBClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.naive_bayes import GaussianNB
 from sklearn.ensemble import RandomForestClassifier
 import numpy as np
 from data_reader import DataProcessor
-from neural.nn_models import Net
+# from neural.nn_models import Net
 
 DEFAULT_MODEL = 'xgb'
 NEURAL_MODEL_PATH = './neural/corn_model2.pt'
@@ -67,10 +67,10 @@ class Models:
         print("using forest model")
         return forest_model
 
-    def get_neural_model(self):
-        net = Net()
-        print("using neural model")
-        return NeuralModel(net, NEURAL_MODEL_PATH)
+    # def get_neural_model(self):
+    #     net = Net()
+    #     print("using neural model")
+    #     return NeuralModel(net, NEURAL_MODEL_PATH)
 
 
 class MockModel:
@@ -79,16 +79,16 @@ class MockModel:
         return np.zeros((1,2))
 
 
-class NeuralModel:
-    def __init__(self, net, model_path):
-        self.net = net
-        self.net.load_state_dict(torch.load(model_path))
-
-    def predict(self, x):
-        pred = self.net(x)
-        prob, label = torch.topk(torch.nn.functional.softmax(pred), 2)
-        risk_profile = prob[1]
-        return risk_profile
+# class NeuralModel:
+#     def __init__(self, net, model_path):
+#         self.net = net
+#         self.net.load_state_dict(torch.load(model_path))
+#
+#     def predict(self, x):
+#         pred = self.net(x)
+#         prob, label = torch.topk(torch.nn.functional.softmax(pred), 2)
+#         risk_profile = prob[1]
+#         return risk_profile
 
 def evaluate_results(pred, y_test):
     TN = 0

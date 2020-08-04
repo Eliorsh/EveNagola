@@ -8,7 +8,7 @@ app = Flask(__name__)
 N_FEATURES = 9
 HIGH_TRESHOLD = 80
 LOW_TRESHOLD = 50
-DATA_PATH = 'data/corona_tested_individuals_ver_0049.csv'
+DATA_PATH = 'data/corona_tested_individuals_ver_005.csv'
 
 
 def get_model(data_path, model_name='xgb'):

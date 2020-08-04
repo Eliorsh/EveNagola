@@ -133,7 +133,7 @@ def compare_model_on_datasets(model, ds_dir):
     return all_results, recalls, precisions
 
 if __name__ == '__main__':
-    data_path = 'data/corona_tested_individuals_ver_0049.csv'
+    data_path = 'data/corona_tested_individuals_ver_005.csv'
     data_dir = './data'
     model = 'xgb'
     print(evaluate_model(model, data_path))

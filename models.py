@@ -22,7 +22,7 @@ class Models:
             'logreg': self.get_logreg_model,
             'bayes': self.get_bayesian_model,
             'forest': self.get_forest_model,
-            'neural': self.get_neural_model
+            # 'neural': self.get_neural_model
         }
 
     def get_model(self, model):
@@ -113,7 +113,7 @@ def evaluate_results(pred, y_test):
 def evaluate_model(model, data_path):
     dp = DataProcessor(data_path)
     dp.clean_data()
-    X_train, X_test, y_train, y_test = dp.split_data()
+    X_train, X_test, y_train, y_test = dp.split_data(wave=0)
     models = Models(X_train, y_train)
     model = models.get_model(model)
     y_pred = model.predict(X_test)

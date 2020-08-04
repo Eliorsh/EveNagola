@@ -11,11 +11,11 @@ from person_classes import People, PersonSet
 
 
 class Workspace:
-    def __init__(self, data_path, set_size, model=DEFAULT_MODEL, flip=False):
+    def __init__(self, data_path, set_size, model=DEFAULT_MODEL, flip=False, train_on_wave=0):
         self.dp = DataProcessor(data_path)
         self.dp.clean_data(flip)
         self.n_days_available = len(self.dp.all_dates)
-        X_train, X_test, y_train, y_test = self.dp.split_data()
+        X_train, X_test, y_train, y_test = self.dp.split_data(wave=train_on_wave)
         models = Models(X_train, y_train)
         self.model_name = model
         self.model = models.get_model(model)
@@ -412,10 +412,10 @@ if __name__ == "__main__":
     # model_names = ['xgb', 'logreg', 'bayes', 'forest']
     # for model_name in model_names:
     flip = False if int(data_path.split('.')[0][-3:]) > 5 else True
-    ws = Workspace(data_path, set_size=6, model='xgb', flip=flip)
+    ws = Workspace(data_path, set_size=6, model='xgb', flip=flip, train_on_wave=2)
     # ws.sample_test_set(n_iterations=10)
-    date_input = 10
-    # date_input = '2020-03-11' #27
+    # date_input = 14
+    date_input = '2020-03-11' #27
     # end_date = '2020-03-31'
 
     # date_input = '2020-04-01'
@@ -423,7 +423,7 @@ if __name__ == "__main__":
     # end_date = '2020-04-24'
     # date_input = ['2020-03-28', '2020-03-30', '2020-04-02']
     # ws.daily(date_input=date_input, end_date=end_date, matrices_sorted=True, display_other=False, use_labels=False)
-    # ws.daily(date_input=date_input, matrices_sorted=True, display_other=False, use_labels=False)
+    ws.daily(date_input=date_input, matrices_sorted=True, display_other=False, use_labels=False)
     # ws.examine_entire_test_set(use_labels=False)
     # ws.examine_simulation_set(10000, 0.05)
-    ws.compare_simulations(15000, [0.01, 0.05, 0.10, 0.15, 0.2], curve=True, disp_nopool=False)
+    # ws.compare_simulations(15000, [0.01, 0.05, 0.10, 0.15, 0.2], curve=True, disp_nopool=False)

@@ -34,10 +34,12 @@ class DataProcessor:
         self.df_dates = df.drop(columns=['test_indication'])
         self.all_dates = self.df_dates.test_date.unique()
         self.processed_df = df.drop(columns=['test_date', 'test_indication'])
-        df_no_na = self.processed_df.dropna()
+        # df_no_na = self.processed_df.dropna()
         # Convert to numpy array
-        self.np_data = np.array(df_no_na)
-        # self.np_data = self.fill_na(self.processed_df, df_no_na)
+        # self.np_data = np.array(df_no_na)
+        self.processed_df = self.processed_df.fillna(self.processed_df.mean())
+        self.np_data = np.array(self.processed_df)
+        # self.np_data = self.fill_na(self.processed_df)
 
     def fill_na(self, df, df_no_na):
         c_gen = Counter(df_no_na.gender)
@@ -90,10 +92,19 @@ class DataProcessor:
             data_by_day[day] = np_df_day
         return data_by_day
 
-    def split_data(self, test_size=0.3, random_state=42):
+    def split_data(self, test_size=0.3, wave=0, random_state=42):
         # Split data
-        X = self.np_data[:, 1:]
-        Y = self.np_data[:, 0]
+        if wave == 1:
+            data = self.processed_df[self.df_dates['test_date'] < '2020-04-25']
+            np_data = np.array(data)
+        elif wave == 2:
+            data = self.processed_df[
+                self.df_dates['test_date'] > '2020-05-31']
+            np_data = np.array(data)
+        else:
+            np_data = self.np_data
+        X = np_data[:, 1:]
+        Y = np_data[:, 0]
         X_train, X_test, y_train, y_test = train_test_split(
             X, Y, test_size=test_size, random_state=random_state)
         self.test_data = np.concatenate((y_test.reshape((len(y_test), 1)), X_test), axis=1)

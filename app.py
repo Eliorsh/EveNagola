@@ -38,7 +38,7 @@ def process_data(req_data):
                          req_data.get('isFever'),
                          req_data.get('isThroatache'),
                          req_data.get('isTroubleBreathing'),
-                         req_data.get('isHeadAche'),
+                         req_data.get('isHeadache'),
                          req_data.get('isOver60'),
                          req_data.get('gender'),
                          req_data.get('isReturningFromAbroad'),

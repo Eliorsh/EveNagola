@@ -10,6 +10,19 @@ HIGH_TRESHOLD = 80
 LOW_TRESHOLD = 50
 DATA_PATH = 'data/corona_tested_individuals_ver_0049.csv'
 
+
+def get_model(data_path, model_name='xgb'):
+    flip = False if int(data_path.split('.')[0][-3:]) > 5 else True
+    dp = DataProcessor(data_path)
+    dp.clean_data(flip)
+    X_train, X_test, y_train, y_test = dp.split_data()
+    models = Models(X_train, y_train)
+    return models.get_model(model_name)
+
+
+model = get_model(DATA_PATH, 'xgb')
+
+
 @app.route('/predict', methods=['post'])
 def predict():
     req_data = request.get_json()
@@ -33,6 +46,7 @@ def predict():
     label = get_danger_label(score, HIGH_TRESHOLD, LOW_TRESHOLD)
     return {'success': True, 'error': None, 'label': label, 'score':score}
 
+
 def process_data(req_data):
     features = np.array([req_data.get('isCoughing'),
                          req_data.get('isFever'),
@@ -45,17 +59,11 @@ def process_data(req_data):
                          req_data.get('isContactedInfected')])
     return features
 
-def get_model(data_path, model_name='xgb'):
-    flip = False if int(data_path.split('.')[0][-3:]) > 5 else True
-    dp = DataProcessor(data_path)
-    dp.clean_data(flip)
-    X_train, X_test, y_train, y_test = dp.split_data()
-    models = Models(X_train, y_train)
-    return models.get_model(model_name)
 
 def set_danger_level(model, features):
     person_data = features.reshape((1, len(features)))
     return model.predict_proba(person_data)[0, 1] * 100
+
 
 def get_danger_label(danger_level, t1=HIGH_TRESHOLD, t2=None):
     if danger_level > t1:
@@ -63,7 +71,3 @@ def get_danger_label(danger_level, t1=HIGH_TRESHOLD, t2=None):
     if t2 and danger_level > t2:
         return 1
     return 0
-
-if __name__ == '__main__':
-    model = get_model(DATA_PATH, 'xgb')
-    app.run()

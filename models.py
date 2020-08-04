@@ -1,6 +1,7 @@
 import glob
 
 # import torch
+from joblib import dump, load
 from xgboost import XGBClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.naive_bayes import GaussianNB
@@ -110,12 +111,17 @@ def evaluate_results(pred, y_test):
             'False Positive': FP, 'recall': TP / (TP + FN),
             'precision': TP / (TP + FP)}
 
-def evaluate_model(model, data_path):
+def get_model_by_name(name, data_path, return_data=False):
     dp = DataProcessor(data_path)
     dp.clean_data()
     X_train, X_test, y_train, y_test = dp.split_data(wave=0)
     models = Models(X_train, y_train)
-    model = models.get_model(model)
+    model = models.get_model(name)
+    if return_data:
+        return model, X_train, X_test, y_train, y_test
+    return model
+
+def evaluate_model(model, X_test, y_test):
     y_pred = model.predict(X_test)
     results = evaluate_results(y_pred, y_test)
     return results
@@ -132,12 +138,24 @@ def compare_model_on_datasets(model, ds_dir):
     precisions = [all_results[num]['precision'] for num in sorted_nums]
     return all_results, recalls, precisions
 
+
+def dump_model(model, path):
+    dump(model, filename=f"{path}.joblib")
+
+
+def load_model(path):
+    return load(path)
+
 if __name__ == '__main__':
     data_path = 'data/corona_tested_individuals_ver_005.csv'
     data_dir = './data'
-    model = 'xgb'
-    print(evaluate_model(model, data_path))
-    # all_results, recalls, precisions = compare_model_on_datasets(model, data_dir)
+    model_name = 'xgb'
+    # model = get_model_by_name(model_name, data_path)
+    # dump_model(model, 'xgb_005')
+    model, X_train, X_test, y_train, y_test = get_model_by_name(model_name, data_path, return_data=True)
+    model = load('saved_models/xgb_005.joblib')
+    print(evaluate_model(model, X_test, y_test))
+    # all_results, recalls, precisions = compare_model_on_datasets(model_name, data_dir)
     # print(recalls)
     # print('-' * 50)
     # print(precisions)

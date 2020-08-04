@@ -1,5 +1,6 @@
 from flask import Flask, request
 import numpy as np
+from joblib import load
 
 from data_reader import DataProcessor
 from models import Models
@@ -20,7 +21,8 @@ def get_model(data_path, model_name='xgb'):
     return models.get_model(model_name)
 
 
-model = get_model(DATA_PATH, 'xgb')
+# model = get_model(DATA_PATH, 'xgb')
+model = load("saved_models/xgb_005.joblib")
 
 
 @app.route('/predict', methods=['post'])

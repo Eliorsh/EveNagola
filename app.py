@@ -36,7 +36,7 @@ def predict():
 def process_data(req_data):
     features = np.array([req_data.get('isCoughing'),
                          req_data.get('isFever'),
-                         req_data.get('isThroatAche'),
+                         req_data.get('isThroatache'),
                          req_data.get('isTroubleBreathing'),
                          req_data.get('isHeadAche'),
                          req_data.get('isOver60'),

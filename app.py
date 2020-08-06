@@ -61,7 +61,7 @@ def process_data(req_data):
 
 def set_danger_level(model, features):
     person_data = features.reshape((1, len(features)))
-    danger =  model.predict_proba(person_data)[0, 1] * 100
+    danger = model.predict_proba(person_data)[0, 1]
     danger = (danger - MIN_SCORE) / (MAX_SCORE - MIN_SCORE)
     return danger
 

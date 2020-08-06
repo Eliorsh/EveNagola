@@ -37,7 +37,12 @@ class DataProcessor:
         # df_no_na = self.processed_df.dropna()
         # Convert to numpy array
         # self.np_data = np.array(df_no_na)
-        self.processed_df = self.processed_df.fillna(self.processed_df.mean())
+        for col_name in self.processed_df.columns:
+            col = self.processed_df[col_name]
+            nulls = col.isnull()
+            col.loc[nulls] = col.dropna().sample(nulls.sum()).values
+        # means = self.processed_df.mean()
+        # self.processed_df = self.processed_df.fillna(means)
         self.np_data = np.array(self.processed_df)
         # self.np_data = self.fill_na(self.processed_df)
 

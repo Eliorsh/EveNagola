@@ -38,7 +38,7 @@ class Person:
         # else:
         #     return (not self.is_infected) * 100
         person_data = self.features.reshape((1, len(self.features)))
-        danger = model.predict_proba(person_data)[0, 1] * 100
+        danger = model.predict_proba(person_data)[0, 1]
         # danger = (danger - MIN_SCORE) / (MAX_SCORE - MIN_SCORE)
         return danger
 

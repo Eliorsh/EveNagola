@@ -1,10 +1,8 @@
 import numpy as np
 
+from constants import MIN_SCORE, MAX_SCORE, HIGH_TRESHOLD, LABELS_VALUES
 from models import MockModel
 
-HIGH_TRESHOLD = 80
-LOW_TRESHOLD = 50
-LABELS_VALUES = {'RED': 2, 'YELLOW:': 1, 'GREEN': 0}
 
 class Person:
     def __init__(self, model, id, is_infected, cough, fever, sore_throat, shortness_of_breath,
@@ -40,7 +38,9 @@ class Person:
         # else:
         #     return (not self.is_infected) * 100
         person_data = self.features.reshape((1, len(self.features)))
-        return model.predict_proba(person_data)[0, 1] * 100
+        danger = model.predict_proba(person_data)[0, 1] * 100
+        danger = (danger - MIN_SCORE) / (MAX_SCORE - MIN_SCORE)
+        return danger
 
     def get_danger_label(self, danger_level, t1=HIGH_TRESHOLD, t2=None):
         if danger_level > t1:

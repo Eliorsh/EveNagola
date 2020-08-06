@@ -2,14 +2,10 @@ from flask import Flask, request
 import numpy as np
 from joblib import load
 
+from constants import HIGH_TRESHOLD, LOW_TRESHOLD, N_FEATURES, MODEL_PATH
 from data_reader import DataProcessor
 from models import Models
 app = Flask(__name__)
-
-N_FEATURES = 9
-HIGH_TRESHOLD = 80
-LOW_TRESHOLD = 50
-DATA_PATH = 'data/corona_tested_individuals_ver_005.csv'
 
 
 def get_model(data_path, model_name='xgb'):
@@ -22,7 +18,7 @@ def get_model(data_path, model_name='xgb'):
 
 
 # model = get_model(DATA_PATH, 'xgb')
-model = load("saved_models/xgb_005.joblib")
+model = load(MODEL_PATH)
 
 
 @app.route('/predict', methods=['post'])

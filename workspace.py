@@ -2,6 +2,7 @@ import numpy as np
 import copy
 import matplotlib.pyplot as plt
 import matplotlib as mpl
+from joblib import load
 from mpl_toolkits.mplot3d import Axes3D
 from tqdm import tqdm
 
@@ -36,6 +37,9 @@ class Workspace:
         self.infection_buildings = np.zeros((self.set_size, self.set_size))
         self.infection_buildings_orig = np.zeros((self.set_size, self.set_size))
         self.all_infections = []
+
+    def load_model(self, path):
+        self.model = load(path)
 
     def work(self, people_sample, use_labels=False, randomize_orig=False):
         Set = PersonSet(size=self.set_size)
@@ -407,12 +411,13 @@ class Workspace:
 if __name__ == "__main__":
     mpl.use('qt5agg')
     # data_path = 'data/corona_tested_individuals_ver_003.xlsx'
-    # data_path = 'data/corona_tested_individuals_ver_005.csv'
-    data_path = 'data/corona_tested_individuals_ver_0049.csv'
+    data_path = 'data/corona_tested_individuals_ver_005.csv'
+    # data_path = 'data/corona_tested_individuals_ver_0049.csv'
     # model_names = ['xgb', 'logreg', 'bayes', 'forest']
     # for model_name in model_names:
     flip = False if int(data_path.split('.')[0][-3:]) > 5 else True
-    ws = Workspace(data_path, set_size=6, model='xgb', flip=flip, train_on_wave=2)
+    ws = Workspace(data_path, set_size=6, model='xgb', flip=flip, train_on_wave=0)
+    ws.load_model('./saved_models/xgb_005.joblib')
     # ws.sample_test_set(n_iterations=10)
     # date_input = 14
     date_input = '2020-03-11' #27
@@ -423,7 +428,7 @@ if __name__ == "__main__":
     # end_date = '2020-04-24'
     # date_input = ['2020-03-28', '2020-03-30', '2020-04-02']
     # ws.daily(date_input=date_input, end_date=end_date, matrices_sorted=True, display_other=False, use_labels=False)
-    ws.daily(date_input=date_input, matrices_sorted=True, display_other=False, use_labels=False)
-    # ws.examine_entire_test_set(use_labels=False)
+    # ws.daily(date_input=date_input, matrices_sorted=True, display_other=False, use_labels=False)
+    ws.examine_entire_test_set(use_labels=False)
     # ws.examine_simulation_set(10000, 0.05)
     # ws.compare_simulations(15000, [0.01, 0.05, 0.10, 0.15, 0.2], curve=True, disp_nopool=False)

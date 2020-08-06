@@ -2,7 +2,8 @@ from flask import Flask, request
 import numpy as np
 from joblib import load
 
-from constants import HIGH_TRESHOLD, LOW_TRESHOLD, N_FEATURES, MODEL_PATH
+from constants import HIGH_TRESHOLD, LOW_TRESHOLD, N_FEATURES, MODEL_PATH, \
+    MIN_SCORE, MAX_SCORE
 from data_reader import DataProcessor
 from models import Models
 app = Flask(__name__)
@@ -60,7 +61,9 @@ def process_data(req_data):
 
 def set_danger_level(model, features):
     person_data = features.reshape((1, len(features)))
-    return model.predict_proba(person_data)[0, 1] * 100
+    danger =  model.predict_proba(person_data)[0, 1] * 100
+    danger = (danger - MIN_SCORE) / (MAX_SCORE - MIN_SCORE)
+    return danger
 
 
 def get_danger_label(danger_level, t1=HIGH_TRESHOLD, t2=None):

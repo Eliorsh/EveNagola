@@ -37,6 +37,10 @@ class Workspace:
         self.infection_buildings = np.zeros((self.set_size, self.set_size))
         self.infection_buildings_orig = np.zeros((self.set_size, self.set_size))
         self.all_infections = []
+        self.n_col_success = 0
+        self.n_row_success = 0
+        self.n_col_success_orig = 0
+        self.n_row_success_orig = 0
 
     def load_model(self, path):
         self.model = load(path)
@@ -66,6 +70,10 @@ class Workspace:
         # print(f"Tests used: {OriginalSet.tests_used}")
 
         if Set.ids_found == OriginalSet.ids_found:
+            self.n_col_success += self._all_sicks_together(Set, 'col', 0)
+            self.n_row_success += self._all_sicks_together(Set, 'row', 0)
+            self.n_col_success_orig += self._all_sicks_together(OriginalSet, 'col', 0)
+            self.n_row_success_orig += self._all_sicks_together(OriginalSet, 'row', 0)
             self.n_sick += Set.n_found
             self.n_sick_list.append(Set.n_found)
             self.all_tests.append(Set.tests_used)
@@ -99,7 +107,13 @@ class Workspace:
         print(
             f"Set worse than OriginalSet in {self.count_worse * 100.0 / good_iterations} % of times!")
 
-        print(f"All sicks: {self.n_sick}")
+        print(f"\nTotal count of all sicks in first col: {self.n_col_success}")
+        print(f"Total count of all sicks in first row: {self.n_row_success}")
+        print("And for the original set:")
+        print(f"Total count of all sicks in first col: {self.n_col_success_orig}")
+        print(f"Total count of all sicks in first row: {self.n_row_success_orig}")
+
+        print(f"\nAll sicks: {self.n_sick}")
         sum_tests_before = np.sum(self.all_tests_orig)
         mean_tests_before = np.mean(self.all_tests_orig)
         std_tests_before = np.std(self.all_tests_orig)
@@ -132,6 +146,15 @@ class Workspace:
                 'std_tests_after': std_tests_after,
                 'all_infections': self.all_infections
                 }
+
+    @staticmethod
+    def _all_sicks_together(set, type, ind):
+        if type == 'col':
+            return sum(set.infection_set[:, ind]) == set.n_found
+        elif type == 'row':
+            return sum(set.infection_set[ind, :]) == set.n_found
+        else:
+            raise("type must equal 'col' or 'row'")
 
     def graph_heatmap(self):
         fig = plt.figure(figsize=(16, 8))
@@ -416,19 +439,23 @@ if __name__ == "__main__":
     # model_names = ['xgb', 'logreg', 'bayes', 'forest']
     # for model_name in model_names:
     flip = False if int(data_path.split('.')[0][-3:]) > 5 else True
-    ws = Workspace(data_path, set_size=6, model='xgb', flip=flip, train_on_wave=0)
-    ws.load_model('./saved_models/xgb_005.joblib')
-    # ws.sample_test_set(n_iterations=10)
-    # date_input = 14
-    date_input = '2020-03-11' #27
-    # end_date = '2020-03-31'
 
-    # date_input = '2020-04-01'
-    # end_date = '2020-03-13'
-    # end_date = '2020-04-24'
-    # date_input = ['2020-03-28', '2020-03-30', '2020-04-02']
-    # ws.daily(date_input=date_input, end_date=end_date, matrices_sorted=True, display_other=False, use_labels=False)
-    # ws.daily(date_input=date_input, matrices_sorted=True, display_other=False, use_labels=False)
-    ws.examine_entire_test_set(use_labels=False)
+    # Parameters
+    train_on_wave = 1
+    set_size = 6
+    use_labels = False
+    # date_input = 14
+    date_input = '2020-03-11' # 1st wave
+    end_date = '2020-04-30'
+    # date_input = '2020-05-31' # 2nd wave
+    # end_date = '2020-07-20'
+
+    ws = Workspace(data_path, set_size=set_size, model='xgb', flip=flip, train_on_wave=train_on_wave)
+    # ws.load_model('./saved_models/xgb_005.joblib')
+    # ws.sample_test_set(n_iterations=10)
+
+    # ws.daily(date_input=date_input, end_date=end_date, matrices_sorted=True, display_other=False, use_labels=use_labels)
+    # ws.daily(date_input=date_input, matrices_sorted=True, display_other=False, use_labels=use_labels)
+    ws.examine_entire_test_set(use_labels=use_labels)
     # ws.examine_simulation_set(10000, 0.05)
     # ws.compare_simulations(15000, [0.01, 0.05, 0.10, 0.15, 0.2], curve=True, disp_nopool=False)

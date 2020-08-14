@@ -10,7 +10,7 @@ from data_reader import DataProcessor
 from models import Models, DEFAULT_MODEL
 from person_classes import People, PersonSet
 
-
+# אליאור צעיר!
 class Workspace:
     def __init__(self, data_path, set_size, model=DEFAULT_MODEL, flip=False, train_on_wave=0):
         self.dp = DataProcessor(data_path)

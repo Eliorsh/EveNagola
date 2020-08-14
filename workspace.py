@@ -41,6 +41,8 @@ class Workspace:
         self.n_row_success = 0
         self.n_col_success_orig = 0
         self.n_row_success_orig = 0
+        self.n_no_internal = 0
+        self.n_no_internal_orig = 0
 
     def load_model(self, path):
         self.model = load(path)
@@ -74,6 +76,8 @@ class Workspace:
             self.n_row_success += self._all_sicks_together(Set, 'row', 0)
             self.n_col_success_orig += self._all_sicks_together(OriginalSet, 'col', 0)
             self.n_row_success_orig += self._all_sicks_together(OriginalSet, 'row', 0)
+            self.n_no_internal += 1 if Set.tests_used == Set.size * 2 else 0
+            self.n_no_internal_orig += 1 if OriginalSet.tests_used == Set.size * 2 else 0
             self.n_sick += Set.n_found
             self.n_sick_list.append(Set.n_found)
             self.all_tests.append(Set.tests_used)
@@ -106,6 +110,10 @@ class Workspace:
 
         print(
             f"Set worse than OriginalSet in {self.count_worse * 100.0 / good_iterations} % of times!")
+
+        print("\nTotal count of tables without internal tests: ")
+        print(f"For Set: {self.n_no_internal}")
+        print(f"For Original Set: {self.n_no_internal_orig}")
 
         print(f"\nTotal count of all sicks in first col: {self.n_col_success}")
         print(f"Total count of all sicks in first row: {self.n_row_success}")

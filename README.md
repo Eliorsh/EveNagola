@@ -1,6 +1,6 @@
-# EveNagola
+# Matrisk-pooling
 
-# Prioritizing tests for the Covid-19 virus
+# Effective pooling for testing patients with the covid 19 virus based on ML and AI models
 
 ## Introduction:
 

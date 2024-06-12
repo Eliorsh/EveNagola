@@ -5,10 +5,10 @@ This repository presents MATRISK-POOLING Algorithm, a new approach to COVID-19 t
 ## Table of Contents
 - [Introduction](#introduction)
 - [Abstract Description of the Method](#abstract-description-of-the-method)
+- [Data](#data)
 - [Features](#features)
 - [Installation](#installation)
 - [Usage](#usage)
-- [Data](#data)
 - [Results](#results)
 - [Contributing](#contributing)
 - [License](#license)
@@ -21,6 +21,9 @@ MATRISK-POOLING is based on building risk profiles for subjects and placing them
 2. Instead of placing this group randomly in a pooling table, the MATRISK POOLING algorithm comes into play.
 3. Using machine learning tools, the algorithm evaluates the chances of each subject being positive for the disease based on various features.
 4. In accordance with this assessment, a risk-based placement is performed within the pooling table. This placement optimizes the need for internal tests, overcoming a structural disadvantage of the traditional pooling method.
+
+## Data
+Data base of the Israeli Ministry of Health that includes sex, age, clinical symptoms, demographic data, contact with a verified patient and stay in another country.
 
 ## Features
 - **Efficient Testing**: Reduces the number of tests required by strategically placing subjects in pooling matrices.

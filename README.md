@@ -1,45 +1,27 @@
-# Matrisk-pooling
+# MATRISK POOLING: A Novel Approach to COVID-19 Testing
 
-# Effective pooling for testing patients with the covid 19 virus based on ML and AI models
+This repository presents MATRISK POOLING, a new approach to COVID-19 testing, aimed at improving the efficiency of laboratory operations and reducing the spread of the virus by extracting information about the subjects.
 
-## Introduction:
+## Table of Contents
+- [Introduction](#introduction)
+- [Features](#features)
+- [Installation](#installation)
+- [Usage](#usage)
+- [Results](#results)
+- [Contributing](#contributing)
+- [License](#license)
 
+## Introduction
+MATRISK POOLING is based on building risk profiles for subjects and placing them in innovative pooling matrices in a precise way that minimizes the number of tests required to identify patients with the virus. This placement method overcomes the structural limitations of traditional pooling methods and allows decision-makers to use the method widely, even with high infection rates in the population, which typically limit the use of pooling.
 
-This repository presents a novel approach to COVID-19 testing, aiming to enhance efficiency in laboratory operations and reduce the spread of the virus. The proposed method suggests testing individuals based on their risk profiles and probability of being infected with COVID-19, rather than relying on random selection as commonly practiced in laboratories today. By prioritizing individuals with higher risk profiles, this approach seeks to minimize transmission rates and promote targeted containment measures. To evaluate the effectiveness of this strategy, a simulation is constructed, comparing two populations in different countries. The simulation assumes that populations in both countries are identical at a specific time t_0, and a limited number of tests are available daily. Additionally, it considers the contagiousness of untested infected individuals based on predefined infection distribution, while tested individuals are assumed to be isolated and non-contagious once identified. Through this simulation, we aim to provide insights into the potential benefits of risk-based testing and its impact on curtailing the spread of the COVID-19 virus.
+## Features
+- **Efficient Testing**: Reduces the number of tests required by strategically placing subjects in pooling matrices.
+- **High Adaptability**: Effective even with high infection rates, unlike traditional pooling methods.
+- **Proven Results**: Tested on real data from the Israeli Ministry of Health with unprecedented results.
 
+## Installation
+To install and run MATRISK POOLING, follow these steps:
 
-
-
-## Quick start
-__Installation__
-
-Explain how to install the necessary packages and dependencies. Provide any commands or links to resources that may be helpful.
-
-## Usage
-
-Explain how to use your project. Provide examples of how to run the code, what data it requires as input, and what output it produces.
-
-## Examples
-
-Provide examples of how your project can be used, and what kind of results it can produce.
-
-## Data
-
-If your project uses data, provide information on how to obtain the data, how it is preprocessed, and any other relevant information.
-
-## Results
-
-If you have run experiments and obtained results, include them here. This will help users understand the performance of your project.
-
-## Contributing
-
-If you are open to contributions from other users, provide instructions on how they can contribute to your project. Include information on how to set up a development environment and how to submit pull requests.
-
-## License
-
-Specify the license under which your project is released.
-
-## Contact
-
-Include your contact information so that users can get in touch with you if they have any questions or feedback..
-
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/yourusername/matrisk-pooling.git

@@ -1,6 +1,6 @@
 # Matrisk Pooling Algorithm: A Novel Approach to COVID-19 Testing
 
-This repository presents MPA (MATRISK POOLING Algorithm), a new approach to COVID-19 testing, aimed at improving the efficiency of laboratory operations and reducing the spread of the virus by extracting information about the subjects.
+This repository presents MPA (Matrisk Pooling Algorithm), a new approach to COVID-19 testing, aimed at improving the efficiency of laboratory operations and reducing the spread of the virus by extracting information about the subjects.
 
 ## Table of Contents
 - [Introduction](#introduction)

@@ -21,7 +21,7 @@ MPA is based on building risk profiles for subjects and placing them in innovati
 2. Instead of placing this group randomly in a pooling table, the MATRISK POOLING algorithm comes into play.
 3. Using machine learning tools, the algorithm evaluates the chances of each subject being positive for the disease based on various features.
 4. In accordance with this assessment, a risk-based placement is performed within the pooling table. This placement optimizes the need for internal tests, overcoming a structural disadvantage of the traditional pooling method.
-
+![Matrisk Pooling Process](desctop/Screenshot 2024-06-13 at 0.38.52.png)
 ## Data
 Data base of the Israeli Ministry of Health that includes sex, age, clinical symptoms, demographic data, contact with a verified patient and stay in another country.
 

@@ -17,11 +17,13 @@ This repository presents MPA (Matrisk Pooling Algorithm), a new approach to COVI
 MPA is based on building risk profiles for subjects and placing them in innovative pooling matrices in a precise way that minimizes the number of tests required to identify patients with the virus. This placement method overcomes the structural limitations of traditional pooling methods and allows decision-makers to use the method widely, even with high infection rates in the population, which typically limit the use of pooling.
 
 ## Abstract Description of the Method
+![Matrisk Pooling Process](images/Screenshot 2024-06-13 at 0.38.52.png)
+
 1. The algorithm receives a daily group of subjects.
 2. Instead of placing this group randomly in a pooling table, the MATRISK POOLING algorithm comes into play.
 3. Using machine learning tools, the algorithm evaluates the chances of each subject being positive for the disease based on various features.
 4. In accordance with this assessment, a risk-based placement is performed within the pooling table. This placement optimizes the need for internal tests, overcoming a structural disadvantage of the traditional pooling method.
-![Matrisk Pooling Process](desctop/Screenshot 2024-06-13 at 0.38.52.png)
+
 ## Data
 Data base of the Israeli Ministry of Health that includes sex, age, clinical symptoms, demographic data, contact with a verified patient and stay in another country.
 
